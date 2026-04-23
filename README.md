@@ -3,7 +3,7 @@
 
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
-*Last updated: 2026-04-23*
+*Last updated: 2026-04-24*
 
 ## Overview
 
