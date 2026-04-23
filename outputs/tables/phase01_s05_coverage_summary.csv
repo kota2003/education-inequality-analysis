@@ -1,0 +1,20 @@
+variable,source,raw_rows,non_null_all_entities,non_null_countries_only,unique_countries_with_data,year_min_country_only,year_max_country_only,country_year_completeness_pct
+urban_population_pct,WB WDI,8874,8874,7378,217,1990,2023,100.0
+population,WB WDI,8874,8874,7378,217,1990,2023,100.0
+gdp_per_capita_usd,WB WDI,8874,8510,7014,214,1990,2023,95.07
+gdp_per_capita_ppp,WB WDI,8874,8093,6597,199,1990,2023,89.41
+agri_value_added_gdp,WB WDI,8874,7675,6218,206,1990,2023,84.28
+unemployment_rate,WB WDI,8874,7619,6167,187,1991,2023,83.59
+mean_years_schooling,UNDP HDR,7004,6455,6081,193,1990,2023,82.42
+services_value_added_gdp,WB WDI,8874,7477,6074,205,1990,2023,82.33
+inflation_cpi,WB WDI,8874,5909,5841,193,1990,2023,79.17
+manu_value_added_gdp,WB WDI,8874,7098,5837,203,1990,2023,79.11
+trade_openness,WB WDI,8874,6972,5784,191,1990,2023,78.4
+gov_expenditure_gdp,WB WDI,8874,6798,5530,185,1990,2023,74.95
+enrol_primary,WB WDI,8874,6420,5111,208,1990,2023,69.27
+enrol_secondary,WB WDI,8874,5587,4286,207,1990,2023,58.09
+enrol_secondary_female,WB WDI,8874,5383,4083,206,1990,2023,55.34
+enrol_secondary_male,WB WDI,8874,5379,4079,206,1990,2023,55.29
+edu_expenditure_gdp,WB WDI,8874,5011,4011,202,1990,2023,54.36
+enrol_tertiary,WB WDI,8874,5037,3760,199,1990,2023,50.96
+gini,WB WDI,8874,2212,2212,171,1990,2023,29.98
