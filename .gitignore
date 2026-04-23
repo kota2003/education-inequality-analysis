@@ -1,0 +1,34 @@
+@'
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Data
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Outputs (track structure, not contents initially)
+outputs/models/*
+!outputs/models/.gitkeep
+
+# Phase summaries (internal handoff artefacts)
+docs/phase_summaries/*
+!docs/phase_summaries/.gitkeep
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Environment variables
+.env
+'@ | Set-Content -Path .gitignore -Encoding UTF8
