@@ -57,3 +57,14 @@ Phase count expanded from 5 to 7 to accommodate the added clustering (Phase 04) 
 - All subsequent phases run inside `p4_education`. Do not install additional packages globally.
 - Any new library introduced in later phases must be followed by `pip freeze > requirements.txt` and a commit noting the addition.
 - `data/raw/` contents are gitignored; raw data acquisition scripts (Phase 01) must be fully re-runnable from the scripts themselves so that a fresh clone can reproduce the raw layer.
+
+## 2026-04-23 — Phase 01, Step 01
+
+**Context:** Drafted `data/raw/manifest.yaml` declaring 3 data sources (World Bank WDI, World Bank country metadata, UNDP HDR) and 18 World Bank indicators. Built `scripts/phase01_s01_design_manifest.py` to structurally validate the manifest and probe each WB indicator code against the World Bank REST API (`/v2/indicator/{code}?format=json`).
+
+**Decision:** Accept Step 01 as complete with 17/18 indicators API-verified and 1 (`SE.SEC.ENRR.MA`) externally verified via the official WB data portal (https://data.worldbank.org/indicator/SE.SEC.ENRR.MA — confirmed live, 1970–2025 coverage, sourced from UNESCO UIS, last published 2026-02). Retry logic (3 attempts, 20s timeout, exponential backoff) resolved 2 of the initial 3 transient timeouts; the remaining one is a route-specific network quirk rather than a code validity issue.
+
+**Rationale:** The purpose of Step 01 is to catch code typos and renames before Step 02 bulk downloads. All 18 codes are confirmed current. Extending retry budgets further would only chase network variance without new information. Step 02's actual download attempt serves as the authoritative test.
+
+**Impact:** Manifest is finalised for Step 02 consumption. Validation report saved at `outputs/tables/phase01_s01_manifest_validation.csv`. No changes to `requirements.txt`. If `SE.SEC.ENRR.MA` fails to download in Step 02, we will revisit with concrete failure information.
+
