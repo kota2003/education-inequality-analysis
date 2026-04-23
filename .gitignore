@@ -32,3 +32,10 @@ docs/phase_summaries/*
 # Environment variables
 .env
 '@ | Set-Content -Path .gitignore -Encoding UTF8
+
+Add-Content -Path .gitignore -Value @'
+
+# Conda
+*.yaml.bak
+environment.local.yml
+'@
