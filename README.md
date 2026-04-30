@@ -3,7 +3,7 @@
 
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
-*Last updated: 2026-04-24*
+*Last updated: 2026-04-26*
 
 ## Overview
 
@@ -46,13 +46,14 @@ panel data.
 | Source | Use |
 |---|---|
 | World Bank — World Development Indicators | Gini, GDP, unemployment, population, urbanisation, trade openness, government expenditure, sector shares, inflation |
-| UNESCO Institute for Statistics | Primary / secondary / tertiary enrolment, gender-disaggregated enrolment, education expenditure |
+| UNESCO Institute for Statistics (mirrored via WB) | Primary / secondary / tertiary enrolment, gender-disaggregated enrolment, education expenditure |
 | UNDP Human Development Report | Mean years of schooling |
 | World Bank country metadata | Region, income-group classification |
 
 - **Unit of observation:** Country × Year (unbalanced panel)
-- **Coverage:** 1990 – 2023, all countries with available data
-- **Expected analytical sample:** 2,000 – 3,500 country-year rows after cleaning
+- **Coverage:** 1990 – 2023, 217 sovereign and near-sovereign states
+- **Integrated panel:** 7,378 rows × 24 columns (217 × 34, fully reindexed)
+- **Analytical sample:** 1,000–3,000 country-year rows depending on specification (Gini-binding)
 
 ## Methods
 
@@ -80,10 +81,11 @@ discussed as future work.
 ## Tech Stack
 
 - **Language:** Python 3.11
-- **Data handling:** pandas, numpy, pycountry, wbdata
+- **Data handling:** pandas, numpy, pycountry
 - **Econometrics:** statsmodels, linearmodels
 - **Machine learning:** scikit-learn, xgboost, shap
 - **Visualisation:** matplotlib, seaborn, plotly
+- **Notebook tooling:** jupyter, nbformat, nbconvert (notebooks built programmatically)
 - **Environment:** conda + pinned `requirements.txt`
 - **Version control:** git with per-phase branches
 
@@ -97,15 +99,19 @@ education-inequality-analysis/
 ├── .python-version            # Python version marker
 ├── .gitignore
 ├── data/
-│   ├── raw/                   # Original data (gitignored)
-│   └── processed/             # Cleaned panel dataset
+│   ├── raw/                   # Original data + manifest.yaml (gitignored)
+│   └── processed/             # panel.csv (analytical artefact) + intermediates
 ├── notebooks/                 # Phase-aligned portfolio notebooks (01..07)
 ├── src/                       # Reusable functions and classes
-├── scripts/                   # Step scripts and maintenance utilities
+│   ├── paths.py               #   project-root locator
+│   ├── manifest.py            #   data source registry accessors
+│   ├── country_metadata.py    #   WB country metadata loader
+│   └── io_utils.py            #   encoding-fallback CSV reader
+├── scripts/                   # Step scripts (phaseXX_sYY_*.py) + maintenance utilities
 ├── outputs/
-│   ├── figures/
-│   ├── models/
-│   └── tables/
+│   ├── figures/               #   phase-prefixed figures
+│   ├── tables/                #   phase-prefixed CSV reports
+│   └── models/                #   trained models (Phase 06+)
 └── docs/
     ├── project_scope.md       # Canonical project scope
     └── phase_summaries/       # Per-phase handoff files (gitignored)
@@ -135,27 +141,57 @@ python -m ipykernel install --user --name p4_education \
     --display-name "Python (p4_education)"
 ```
 
-### 4. Run the notebooks
+### 4. Reproduce the data layer
 
-Open `notebooks/` in Jupyter or VS Code, select the `p4_education` kernel,
-and execute notebooks in numerical order (01 → 07).
+`data/raw/` and `data/processed/` are gitignored. Regenerate them by
+running the Phase 01–02 step scripts in order:
+
+```bash
+python scripts/phase01_s01_design_manifest.py
+python scripts/phase01_s02_download_world_bank.py
+python scripts/phase01_s04_download_undp_hdr.py
+python scripts/phase01_s05_inspect_coverage.py
+python scripts/phase02_s02_build_intermediate_long.py
+python scripts/phase02_s03_concat_master_long.py
+python scripts/phase02_s04_pivot_to_wide_panel.py
+python scripts/phase02_s05_missingness_report.py
+```
+
+### 5. View the notebooks
+
+Open `notebooks/` in Jupyter or VS Code, select the `p4_education`
+kernel, and execute notebooks in numerical order (01 → 07).
 
 ## Project Status
 
 | Phase | Title | Status |
 |---|---|---|
 | 00 | Scope & Setup | ✅ Complete |
-| 01 | Data Collection | ⏳ Pending |
-| 02 | Data Cleaning & Integration | ⏳ Pending |
+| 01 | Data Collection | ✅ Complete |
+| 02 | Data Cleaning & Integration | ✅ Complete |
 | 03 | Exploratory Data Analysis | ⏳ Pending |
 | 04 | Country Clustering | ⏳ Pending |
 | 05 | Econometric Modelling | ⏳ Pending |
 | 06 | Predictive Modelling & Interpretability | ⏳ Pending |
 | 07 | Synthesis & Policy Discussion | ⏳ Pending |
 
-## Key Findings
+## Findings
 
-*Findings will be populated here as phases complete. Expected content:*
+### Available now (data infrastructure, Phases 01–02)
+
+- **Phase 01** — [`01_data_collection.ipynb`](notebooks/01_data_collection.ipynb)
+  documents the raw layer: a machine-readable manifest of 19 declared variables
+  across three sources (WB WDI, WB country metadata, UNDP HDR), per-variable
+  coverage characterisation, and source reconciliation. Gini emerges as the
+  binding constraint at 30% country-year completeness.
+- **Phase 02** — [`02_data_cleaning.ipynb`](notebooks/02_data_cleaning.ipynb)
+  produces the integrated 7,378-row × 24-column panel covering 217 countries
+  × 34 years (1990–2023). Missingness is profiled per-variable, jointly across
+  candidate specifications, and visually as a country × year heatmap.
+  Removing Gini from the baseline specification doubles the listwise sample
+  (1,423 → 3,041 rows) — the quantitative anchor for the project's MNAR caveat.
+
+### Coming soon (analytical findings, Phases 05–07)
 
 - *Headline results from econometric models (Phase 05)*
 - *Top drivers of inequality identified by SHAP (Phase 06)*
@@ -166,8 +202,8 @@ and execute notebooks in numerical order (01 → 07).
 *A detailed discussion will appear after Phase 07. Known constraints by design:*
 
 - Observational data — causal claims are made only with explicit caveats
-- Cross-country Gini measurement is heterogeneous
-- Systematic missingness under-represents low-income countries
+- Cross-country Gini measurement is heterogeneous (consumption- vs income-based surveys)
+- Systematic missingness under-represents low-income countries (plausibly MNAR)
 - IV, DiD, and dynamic panel estimators are out of scope; framed as next steps
 
 ## Documentation

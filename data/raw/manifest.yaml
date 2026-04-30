@@ -1,0 +1,162 @@
+# ============================================================================
+# Data Source Registry
+# Project : Education and Income Inequality — A Cross-Country Panel Analysis
+# Schema  : v1
+# ----------------------------------------------------------------------------
+# Canonicalisation policy
+#   The raw layer preserves each source's native identifiers (ISO-3 code AND
+#   the source's own country name). Canonicalisation to a single ISO-3 key is
+#   deferred to Phase 02 (data cleaning & integration).
+#
+# Reproducibility policy
+#   data/raw/ is gitignored. A fresh clone must be able to regenerate the
+#   entire raw layer from the download scripts in scripts/, guided by this
+#   manifest. `retrieved_on` fields are populated by those scripts at run
+#   time, not committed.
+# ============================================================================
+
+schema_version: 1
+project: education-inequality-analysis
+coverage:
+  start_year: 1990
+  end_year: 2023
+
+sources:
+
+  # --------------------------------------------------------------------------
+  # World Bank — World Development Indicators
+  #   Includes the UNESCO UIS mirror series (SE.*), which lets us keep a single
+  #   API endpoint for all numeric indicators.
+  # --------------------------------------------------------------------------
+  world_bank_wdi:
+    description: World Bank World Development Indicators (includes UNESCO UIS mirror series SE.*)
+    access_method: wbdata
+    api_endpoint: https://api.worldbank.org/v2
+    retrieved_on: null
+    output_file: data/raw/world_bank/wb_wdi.csv
+    indicators:
+
+      # ----- Target -----
+      - code: SI.POV.GINI
+        name: gini
+        description: Gini index (World Bank estimate)
+        role: target
+
+      # ----- Education (UNESCO UIS, mirrored in WB) -----
+      - code: SE.PRM.ENRR
+        name: enrol_primary
+        description: School enrolment, primary (% gross)
+        role: explanatory
+      - code: SE.SEC.ENRR
+        name: enrol_secondary
+        description: School enrolment, secondary (% gross)
+        role: explanatory
+      - code: SE.TER.ENRR
+        name: enrol_tertiary
+        description: School enrolment, tertiary (% gross)
+        role: explanatory
+      - code: SE.SEC.ENRR.FE
+        name: enrol_secondary_female
+        description: School enrolment, secondary, female (% gross)
+        role: explanatory
+      - code: SE.SEC.ENRR.MA
+        name: enrol_secondary_male
+        description: School enrolment, secondary, male (% gross)
+        role: explanatory
+      - code: SE.XPD.TOTL.GD.ZS
+        name: edu_expenditure_gdp
+        description: Government expenditure on education, total (% of GDP)
+        role: explanatory
+
+      # ----- Economic controls -----
+      - code: NY.GDP.PCAP.PP.KD
+        name: gdp_per_capita_ppp
+        description: GDP per capita, PPP (constant 2017 international $)
+        role: control
+      - code: NY.GDP.PCAP.CD
+        name: gdp_per_capita_usd
+        description: GDP per capita (current US$) — fallback when PPP series is missing
+        role: control_fallback
+      - code: SL.UEM.TOTL.ZS
+        name: unemployment_rate
+        description: Unemployment, total (% of total labor force, ILO modeled)
+        role: control
+      - code: FP.CPI.TOTL.ZG
+        name: inflation_cpi
+        description: Inflation, consumer prices (annual %)
+        role: control
+
+      # ----- Structural controls -----
+      - code: SP.POP.TOTL
+        name: population
+        description: Total population
+        role: control
+      - code: SP.URB.TOTL.IN.ZS
+        name: urban_population_pct
+        description: Urban population (% of total population)
+        role: control
+      - code: NE.TRD.GNFS.ZS
+        name: trade_openness
+        description: Trade (% of GDP)
+        role: control
+      - code: NE.CON.GOVT.ZS
+        name: gov_expenditure_gdp
+        description: General government final consumption expenditure (% of GDP)
+        role: control
+      - code: NV.AGR.TOTL.ZS
+        name: agri_value_added_gdp
+        description: Agriculture, forestry, and fishing, value added (% of GDP)
+        role: control
+      - code: NV.IND.MANF.ZS
+        name: manu_value_added_gdp
+        description: Manufacturing, value added (% of GDP)
+        role: control
+      - code: NV.SRV.TOTL.ZS
+        name: services_value_added_gdp
+        description: Services, value added (% of GDP)
+        role: control
+
+  # --------------------------------------------------------------------------
+  # World Bank — country metadata
+  #   Region and income-group classifications, plus ISO-3 codes. Used in
+  #   Layer A clustering (Phase 04) and Layer B heterogeneity analysis.
+  # --------------------------------------------------------------------------
+  world_bank_metadata:
+    description: World Bank country metadata (region, income group, ISO-3 codes)
+    access_method: wbdata
+    api_endpoint: https://api.worldbank.org/v2
+    retrieved_on: null
+    output_file: data/raw/world_bank/wb_country_metadata.csv
+    fields:
+      - id             # ISO-3 code
+      - name           # canonical WB country name
+      - region
+      - incomeLevel
+      - capitalCity
+      - latitude
+      - longitude
+
+  # --------------------------------------------------------------------------
+  # UNDP — Human Development Report composite indices
+  #   HDR 2025 vintage (released May 2025), covering 1990–2023.
+  #   Single variable of interest: mean years of schooling (adults 25+).
+  #   CSV is published in Windows-1252 / Latin-1, not UTF-8 — the download
+  #   script handles this with an encoding-fallback reader.
+  # --------------------------------------------------------------------------
+  undp_hdr:
+    description: UNDP Human Development Report — composite indices complete time series (HDR 2025)
+    access_method: direct_download
+    url: https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv
+    metadata_url: https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_metadata.xlsx
+    retrieved_on: null
+    output_file: data/raw/undp_hdr/hdr_composite_indices.csv
+    variables:
+      - source_name: mys
+        target_name: mean_years_schooling
+        description: Mean years of schooling (population aged 25+)
+        role: explanatory
+    notes: |
+      Country name canonicalisation deferred to Phase 02.
+      If the URL returns 404 when Step 04 runs, check
+      https://hdr.undp.org/data-center/documentation-and-downloads
+      for the latest composite-indices CSV and update this manifest.

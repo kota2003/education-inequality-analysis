@@ -107,3 +107,125 @@ Phase count expanded from 5 to 7 to accommodate the added clustering (Phase 04) 
 **Rationale:** `src/` promotion limited to one function because the download / retry / manifest-loading logic is tightly scoped to Phase 01 scripts and is more legible inline than re-imported. Further promotions are deferred to Phase 02 when concrete re-use demand appears (likely a country-canonicalisation helper).
 
 **Impact:** Phase 01 closes. All deliverables listed in `docs/phase_summaries/phase01_summary.md`. Raw data layer is reproducible from the step scripts; the notebook and `src/io_utils.py` are the only code artefacts that persist into Phase 02.
+
+## 2026-04-25 — Phase 02, Step 01
+
+**Context:** Phase 02 (Data Cleaning & Integration) opens with five
+unresolved design questions inherited from Phase 01: analytical window,
+treatment of WB-only countries lacking HDR coverage, missingness
+strategy, timing of log transforms, and whether to attach Gini
+provenance metadata. These choices shape the schema of
+`data/processed/panel.csv` and constrain every downstream phase, so
+they are recorded before any integration code is written.
+
+**Decision:**
+
+1. **Analytical window — keep 1990–2023 in the panel.** The panel
+   retains the full Scope-committed window. Specification-level sample
+   restrictions (e.g. enrolment-dependent models effectively becoming
+   2000–2023) are handled at modelling time, not at panel construction.
+2. **WB-only 22 countries — retain with `mys` = NaN.** The 22 entities
+   (21 high-income territories/SARs + Kosovo) are kept in the panel.
+   Listwise deletion at the specification level will drop them
+   automatically from any model that includes `mys`.
+3. **Missingness — listwise default, per-specification reporting.**
+   Multiple imputation is rejected: Gini's missingness concentrates in
+   low-income countries and is plausibly MNAR, so MI under MAR would
+   inflate apparent power without controlling bias direction. Each
+   model specification will report N and country coverage explicitly.
+4. **Log transforms — apply at modelling time (Phase 05).** `panel.csv`
+   stores `gdp_per_capita` and `population` in raw units. EDA in
+   Phase 03 sees the genuine skewed distributions; Phase 05 applies
+   `np.log` at use.
+5. **Gini provenance metadata — not attached in Phase 02.** Adding a
+   PIP method-type column would require a separate API call surface
+   and would yield a partially-populated column that pollutes the
+   panel. The Gini measurement-heterogeneity caveat is deferred to
+   Phase 07's causal discussion (already flagged in Scope §12).
+
+**Rationale:**
+
+- **Discard data only once, at the latest stage.** Trimming the window
+  or dropping countries during cleaning forecloses analyses (early-
+   1990s descriptive statistics, high-income heterogeneity) that the
+  panel could otherwise support at near-zero storage cost.
+- **Statistical honesty over statistical convenience.** MI on a
+  plausibly MNAR target inflates effective sample size without
+  trustworthy bias control. Phase 07 framing the missingness as a
+  named threat to identification is more credible than imputed
+  coefficients.
+- **Schema discipline.** Storing log columns or a half-populated
+  provenance column duplicates state and creates "which column do I
+  use?" ambiguity. The panel stores raw, model-time code applies
+  transformations.
+
+**Impact:**
+
+- Phase 02 Steps 02–05 build a panel keyed on (iso3, year) over
+  1990–2023 with 217 WB countries (HDR's 195 plus the 22 WB-only).
+- Phase 03 EDA can plot raw `gdp_per_capita` and `population`
+  distributions directly; log scale is a plotting choice, not a
+  schema fact.
+- Phase 05 modelling code owns log transforms and listwise sample
+  construction, and must report N + country coverage per
+  specification.
+- Phase 07 inherits the Gini measurement caveat and the MNAR
+  selection-bias discussion.
+
+
+  
+
+---
+
+## 2026-04-25 — Phase 02 Completion
+
+**Context:** Phase 02 — Data Cleaning & Integration — produced the
+analytical panel from the raw layer Phase 01 deposited. Six step
+scripts plus a portfolio notebook completed in sequence; the entire
+processed layer is reproducible from a fresh clone given only the raw
+files.
+
+**Decision (closure):**
+
+- The analytical panel is fixed at `data/processed/panel.csv`:
+  7,378 rows × 24 columns (217 countries × 34 years; 5 metadata
+  columns plus 19 variables in canonical manifest declaration order).
+- Missingness is documented along three axes: per-variable in
+  `outputs/tables/phase02_missingness_report.csv`, spatiotemporal in
+  `outputs/figures/phase02_missingness_matrix.png`, narrative in
+  `notebooks/02_data_cleaning.ipynb`.
+- Phase 03 EDA inherits this panel without modification. Any future
+  panel revision must produce a versioned successor and document the
+  diff.
+
+**Rationale:**
+
+Three discoveries during Phase 02 carry forward as binding constraints
+or named caveats:
+
+1. **24 WB countries lack a usable `mys` value** (Phase 01 had
+   predicted 22). The 2-country gap traces to HDR iso3 rows that
+   exist but contain no observed `mys` for any year. Listwise
+   deletion handles this automatically per Decision 2.
+2. **Removing Gini more than doubles the listwise sample.** The
+   illustrative `core_education_economic` specification (with Gini)
+   yields 1,423 rows; the same specification without Gini yields
+   3,041. This is the quantitative baseline for the MNAR caveat
+   recorded in Step 01 Decision 3.
+3. **`unemployment_rate` first observed year is 1991.** Any 1990
+   cross-section using ILO modeled unemployment will be empty;
+   FE specifications are unaffected.
+
+**Impact:**
+
+- Phase 03 EDA reads `panel.csv` directly; variables are in manifest
+  declaration order, metadata in columns 3-5. `src.manifest` provides
+  programmatic access to variable lists.
+- Phase 05 modelling code owns log transforms, listwise deletion, and
+  per-specification N reporting.
+- Phase 07 inherits three named threats to identification:
+  Gini measurement heterogeneity, MNAR selection (low-income
+  under-coverage), and reverse causality.
+- `src/` now contains `paths.py`, `manifest.py`, and
+  `country_metadata.py` in addition to the `io_utils.py` promoted
+  in Phase 01.

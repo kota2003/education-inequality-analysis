@@ -14,6 +14,8 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+!data/raw/.gitkeep
+!data/raw/manifest.yaml
 
 # Outputs (track structure, not contents initially)
 outputs/models/*
