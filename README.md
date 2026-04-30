@@ -3,7 +3,7 @@
 
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
-*Last updated: 2026-04-26*
+*Last updated: 2026-05-01*
 
 ## Overview
 
@@ -169,7 +169,7 @@ kernel, and execute notebooks in numerical order (01 → 07).
 | 00 | Scope & Setup | ✅ Complete |
 | 01 | Data Collection | ✅ Complete |
 | 02 | Data Cleaning & Integration | ✅ Complete |
-| 03 | Exploratory Data Analysis | ⏳ Pending |
+| 03 | Exploratory Data Analysis | ✅ Complete |
 | 04 | Country Clustering | ⏳ Pending |
 | 05 | Econometric Modelling | ⏳ Pending |
 | 06 | Predictive Modelling & Interpretability | ⏳ Pending |
@@ -177,7 +177,7 @@ kernel, and execute notebooks in numerical order (01 → 07).
 
 ## Findings
 
-### Available now (data infrastructure, Phases 01–02)
+### Available now (data infrastructure & EDA, Phases 01–03)
 
 - **Phase 01** — [`01_data_collection.ipynb`](notebooks/01_data_collection.ipynb)
   documents the raw layer: a machine-readable manifest of 19 declared variables
@@ -190,9 +190,20 @@ kernel, and execute notebooks in numerical order (01 → 07).
   candidate specifications, and visually as a country × year heatmap.
   Removing Gini from the baseline specification doubles the listwise sample
   (1,423 → 3,041 rows) — the quantitative anchor for the project's MNAR caveat.
+- **Phase 03** — [`03_eda.ipynb`](notebooks/03_eda.ipynb) characterises the
+  analytical panel along five axes: univariate distributions, bivariate Gini
+  relationships, multicollinearity, time trends by region and income group,
+  and country-level geography. Headline findings: mean years of schooling is
+  the strongest single linear predictor of Gini (r = −0.52, OLS R² = 0.27);
+  the three secondary-enrolment variables are arithmetically nested with VIFs
+  in the 9,000–40,000 range, forcing a one-of-three choice in Phase 05; and
+  the income-group view of Gini is consistent with a Kuznets-type inverted-U
+  in which upper-middle income countries — not low income — are the most
+  unequal.
 
-### Coming soon (analytical findings, Phases 05–07)
+### Coming soon (analytical findings, Phases 04–07)
 
+- *Country typology from descriptive clustering (Phase 04)*
 - *Headline results from econometric models (Phase 05)*
 - *Top drivers of inequality identified by SHAP (Phase 06)*
 - *Cross-method comparison and policy-relevant takeaways (Phase 07)*
