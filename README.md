@@ -53,6 +53,7 @@ panel data.
 - **Unit of observation:** Country × Year (unbalanced panel)
 - **Coverage:** 1990 – 2023, 217 sovereign and near-sovereign states
 - **Integrated panel:** 7,378 rows × 24 columns (217 × 34, fully reindexed)
+- **Country-level analytical typology:** 167 countries (Phase 04, 2010–2019 means)
 - **Analytical sample:** 1,000–3,000 country-year rows depending on specification (Gini-binding)
 
 ## Methods
@@ -61,13 +62,13 @@ panel data.
 - Distribution and time-trend analysis
 - Correlation matrix with VIF diagnostics
 - Geographic visualisation (choropleth)
-- K-means / hierarchical clustering of countries
+- K-means + Ward hierarchical clustering of countries (Phase 04)
 
 **Explanatory layer**
 - Pooled OLS baseline
 - Fixed Effects (country + year) with clustered standard errors
 - Random Effects + Hausman test for specification choice
-- Heterogeneity analysis by income group / region
+- Heterogeneity analysis by income group / region / cluster
 
 **Predictive layer**
 - Random Forest and Gradient Boosting (XGBoost)
@@ -100,13 +101,14 @@ education-inequality-analysis/
 ├── .gitignore
 ├── data/
 │   ├── raw/                   # Original data + manifest.yaml (gitignored)
-│   └── processed/             # panel.csv (analytical artefact) + intermediates
+│   └── processed/             # panel.csv, country_features*.csv (analytical artefacts)
 ├── notebooks/                 # Phase-aligned portfolio notebooks (01..07)
 ├── src/                       # Reusable functions and classes
 │   ├── paths.py               #   project-root locator
 │   ├── manifest.py            #   data source registry accessors
 │   ├── country_metadata.py    #   WB country metadata loader
-│   └── io_utils.py            #   encoding-fallback CSV reader
+│   ├── io_utils.py            #   encoding-fallback CSV reader
+│   └── log_utils.py           #   PROJECT_LOG idempotent-append helper
 ├── scripts/                   # Step scripts (phaseXX_sYY_*.py) + maintenance utilities
 ├── outputs/
 │   ├── figures/               #   phase-prefixed figures
@@ -144,17 +146,23 @@ python -m ipykernel install --user --name p4_education \
 ### 4. Reproduce the data layer
 
 `data/raw/` and `data/processed/` are gitignored. Regenerate them by
-running the Phase 01–02 step scripts in order:
+running the step scripts in order:
 
 ```bash
+# Phase 01 - raw data acquisition
 python scripts/phase01_s01_design_manifest.py
 python scripts/phase01_s02_download_world_bank.py
 python scripts/phase01_s04_download_undp_hdr.py
 python scripts/phase01_s05_inspect_coverage.py
+
+# Phase 02 - panel construction
 python scripts/phase02_s02_build_intermediate_long.py
 python scripts/phase02_s03_concat_master_long.py
 python scripts/phase02_s04_pivot_to_wide_panel.py
 python scripts/phase02_s05_missingness_report.py
+
+# Phase 04 - country-level feature matrix (depends on panel.csv)
+python scripts/phase04_s02_build_country_features.py
 ```
 
 ### 5. View the notebooks
@@ -170,14 +178,14 @@ kernel, and execute notebooks in numerical order (01 → 07).
 | 01 | Data Collection | ✅ Complete |
 | 02 | Data Cleaning & Integration | ✅ Complete |
 | 03 | Exploratory Data Analysis | ✅ Complete |
-| 04 | Country Clustering | ⏳ Pending |
+| 04 | Country Clustering | ✅ Complete |
 | 05 | Econometric Modelling | ⏳ Pending |
 | 06 | Predictive Modelling & Interpretability | ⏳ Pending |
 | 07 | Synthesis & Policy Discussion | ⏳ Pending |
 
 ## Findings
 
-### Available now (data infrastructure & EDA, Phases 01–03)
+### Available now (descriptive infrastructure & typology, Phases 01–04)
 
 - **Phase 01** — [`01_data_collection.ipynb`](notebooks/01_data_collection.ipynb)
   documents the raw layer: a machine-readable manifest of 19 declared variables
@@ -200,10 +208,24 @@ kernel, and execute notebooks in numerical order (01 → 07).
   the income-group view of Gini is consistent with a Kuznets-type inverted-U
   in which upper-middle income countries — not low income — are the most
   unequal.
+- **Phase 04** — [`04_country_clustering.ipynb`](notebooks/04_country_clustering.ipynb)
+  builds a data-driven typology of 167 countries via K=3 K-means clustering
+  on seven standardised development features (`mean_years_schooling`,
+  log `gdp_per_capita_ppp`, `enrol_secondary`, three sector shares,
+  `urban_population_pct`). The typology **independently re-discovers the
+  Kuznets inverted-U** flagged in Phase 03 finding #4: Cluster 1
+  (Middle-development / Kuznets transition, n=59) has the highest mean
+  Gini at 39.05, surpassing both Cluster 0 (Low-development / Sub-Saharan-led,
+  n=40, mean Gini 38.24) and Cluster 2 (High-development / mature economies,
+  n=68, mean Gini 34.72). Cross-algorithm agreement (K-means K=3 vs Ward
+  K=3 Adjusted Rand Index = 0.65) is substantial; PC1 alone captures 63.2%
+  of variance across the seven features, indicating that development is
+  approximately one-dimensional in this space. Cluster assignments are
+  exposed in [`outputs/tables/phase04_s04_cluster_assignments.csv`](outputs/tables/phase04_s04_cluster_assignments.csv)
+  and feed Phase 05 robustness specifications as cluster fixed effects.
 
-### Coming soon (analytical findings, Phases 04–07)
+### Coming soon (analytical findings, Phases 05–07)
 
-- *Country typology from descriptive clustering (Phase 04)*
 - *Headline results from econometric models (Phase 05)*
 - *Top drivers of inequality identified by SHAP (Phase 06)*
 - *Cross-method comparison and policy-relevant takeaways (Phase 07)*

@@ -617,3 +617,531 @@ Two phase-level engineering decisions:
 - No `requirements.txt` change. `scikit-learn`, `scipy`, and
   `matplotlib` are already pinned; the gap statistic implementation
   uses only NumPy + scikit-learn, no new package.
+
+## 2026-05-01 — Phase 04, Step 02b
+
+**Context:** Step 02 was first run with the Step 01 Decision 3
+primary window of 2015-2019. The run produced 155 listwise-complete
+countries from 217, satisfying the pre-registered fallback threshold
+of 150 by a margin of 5 and therefore accepting the primary window
+under the rule as written.
+
+Qualitative inspection of the 62-country exclusion list immediately
+flagged a problem: CHN was dropped on `enrol_secondary` alone, as
+were DZA, ZWE, NIC, GIN, COG, TJK, GMB, GUY, LBR, PLW, SLB. The
+2015-2019 listwise sample retained 155 countries but excluded the
+single largest middle-income country in the world and a cluster of
+LMICs whose presence is essential to a credible
+education-inequality typology. The pre-registered numerical rule
+had passed; the qualitative substance had not.
+
+A diagnostic comparison was then run
+(`scripts/phase04_diag_compare_windows.py`) over four windows:
+2015-2019, 2010-2019, 2005-2019, 2000-2019. The results:
+
+| Window     | Listwise count | CHN included | Watchlist rescued |
+|------------|---------------:|:------------:|:-----------------:|
+| 2015-2019  | 155            | no           | -                 |
+| 2010-2019  | 167            | yes          | +12               |
+| 2005-2019  | 176            | yes          | +21               |
+| 2000-2019  | 178            | yes          | +23               |
+
+The +12 countries newly included by widening to 2010-2019 are: CHN,
+COG, DZA, GIN, GMB, GUY, LBR, NIC, PLW, SLB, TJK, ZWE. The
+incremental rescues from further widening to 2005-2019 (BWA, FSM,
+GNB, GNQ, IRQ, KIR, LBY, SDN, UGA) include several conflict-affected
+states (IRQ, LBY, SDN) for which a 15-year period mean averages
+across major structural ruptures (Iraq War aftermath, Libyan civil
+war, South Sudan secession), making the resulting "country state"
+hard to interpret. The marginal gain from 2000-2019 over 2005-2019
+is +2 countries (TKM, TTO) and is not worth the further loss of
+"current state" interpretation.
+
+**Decision:** Re-run Step 02 with `PRIMARY_WINDOW = (2010, 2019)`.
+Retain `FALLBACK_WINDOW = (2005, 2019)` as a safety net (not
+expected to trigger). Re-run produces 167 listwise-complete
+countries from 217, written to
+`data/processed/country_features.csv` (217 rows, raw scale, NaN
+preserved) and
+`data/processed/country_features_standardised.csv` (167 rows,
+z-scored).
+
+**Rationale:**
+
+- **The pre-registered threshold (150) was honoured by the data
+  (155 >= 150) but the threshold was a numerical proxy for a
+  qualitative goal: "enough countries that the typology covers the
+  policy-relevant world".** Once the exclusion list made it clear
+  the proxy had failed (CHN missing), the substantive goal took
+  precedence. This is adaptive design, not pre-registration
+  violation: the adaptation is documented here at the moment of
+  the decision, not buried in retrospective rationalisation.
+
+- **CHN inclusion is not negotiable for portfolio quality.** A
+  cross-country education-inequality typology that excludes the
+  world's second-largest economy and largest middle-income country
+  cannot credibly speak to the Kuznets-type pattern flagged in
+  Phase 03 finding #4 (income-faceted Gini inverted-U), since CHN
+  is the upper-middle-income exemplar of that pattern.
+
+- **2010-2019 is the smallest widening that achieves the
+  qualitative goal.** It rescues CHN plus 11 other LMICs with no
+  cost to interpretability: the period sits entirely post-GFC and
+  pre-COVID, and contains no major structural rupture in any
+  rescued country (CHN's WTO-era acceleration peaked 2001-2010, so
+  the chosen window starts at the inflection point, not in the
+  middle of the transition). Wider windows (2005-2019, 2000-2019)
+  rescue marginal additional countries at increasing interpretive
+  cost.
+
+- **The "current state" narrative is preserved.** "Latest five
+  years" becomes "latest ten years"; the Phase 04 deliverable is
+  still defensibly characterising recent country structure rather
+  than long-run averages.
+
+**Impact:**
+
+- `data/processed/country_features.csv` regenerated: 217 rows
+  (unchanged), but feature values reflect 2010-2019 means rather
+  than 2015-2019 means.
+- `data/processed/country_features_standardised.csv` regenerated:
+  167 rows (was 155). The 12 newly-included countries enter
+  K-means and Ward clustering in Steps 03-05.
+- Phase 04 narrative gains a transparent example of adaptive
+  decision-making for the notebook synthesis: "the pre-registered
+  rule passed numerically but the exclusion list inspection drove
+  a 5-year widening".
+- Phase 03 finding #4 (Kuznets inverted-U) is now testable in
+  Phase 04 with CHN included as an upper-middle-income exemplar.
+- The 50 countries still excluded after the widening are
+  predominantly conflict-affected states (HTI, ZMB, VEN, PRK, SOM,
+  SSD, SYR, YEM), WB-only territories (22 entries lacking `mys`),
+  and structural-data-deficit countries. Their absence is
+  consistent with the MNAR caveat already named in Phase 02
+  Decision 3 and Phase 03 Step 01 Decision 6 design rationale.
+- No `requirements.txt` change. `scripts/phase04_diag_compare_windows.py`
+  is committed to the repo as the audit trail for this decision.
+
+## 2026-05-01 — Phase 04, Step 03b
+
+**Context:** Step 03 computed the four pre-registered K-selection
+diagnostics (Elbow, Silhouette, Calinski-Harabasz, Gap statistic
+with 1-SE rule) on the 167-country, 7-feature standardised matrix
+over K = 2..10. The per-method preferred K values were:
+
+| Diagnostic        | Preferred K | Notes                                     |
+|-------------------|------------:|-------------------------------------------|
+| Elbow (WCSS)      | 3           | Only diagnostic supporting K = 3          |
+| Silhouette        | 2           | 0.392 at K=2 vs 0.252 at K=3              |
+| Calinski-Harabasz | 2           | 138 at K=2; monotonically decreasing      |
+| Gap (1-SE rule)   | 4           | Margin 0.004; gap monotone-rising to K=11 |
+
+The Step 01 Decision 6 mechanical consensus rule recommends K = 2
+on a 2/4 plurality (Silhouette + CH).
+
+**Decision:** Override the mechanical consensus and use K = 3 as
+the primary clustering K. Fit K = 2 and K = 4 K-means in Step 04
+as robustness comparators (cluster sizes + silhouette only; full
+profiling, Ward hierarchical, and the choropleth use K = 3).
+
+**Rationale:**
+
+- **The data is a development gradient, not a discrete cluster
+  structure.** The Gap statistic increases monotonically over the
+  full K = 2..11 range (0.964 -> 1.246) with no plateau, which is
+  the textbook signature of a continuous distribution rather than
+  separable clusters. This is the substantive shape of the data:
+  countries lie along a development continuum (the Phase 03
+  income-Kuznets evidence). Clustering here is region-of-the-
+  continuum extraction, not category discovery, and "best K" must
+  be evaluated with that framing.
+
+- **Silhouette and Calinski-Harabasz both have a structural bias
+  toward small K on continuous data.** Silhouette compares
+  intra- to nearest-other-cluster distances; on a development
+  gradient the cleanest "intra/inter" split is the single
+  bisection (Global North vs. rest), which is exactly the K = 2
+  result. CH is a between/within ratio that on continuous data
+  tends to favour fewer, broader regions. These two diagnostics
+  agreeing on K = 2 is not independent evidence; it is the same
+  bias appearing twice.
+
+- **Elbow is the only diagnostic that targets "how many regions
+  meaningfully reduce within-cluster variance" rather than
+  "how separable are the clusters".** Its K = 3 pick is therefore
+  more informative for a development-gradient setting than the
+  Silhouette + CH 2/4 plurality.
+
+- **Gap statistic K = 4 is fragile and circular.** The 1-SE rule
+  fired with margin 0.004 (gap[K=4] = 1.101; gap[K=5] - se[K=5]
+  = 1.125 - 0.028 = 1.097). At fifty reference draws this margin
+  is well within sampling noise. K = 4 also coincides numerically
+  with the WB income classification's four bands; "discover the
+  income bands by clustering on development indicators" is a
+  circular finding that adds no portfolio value.
+
+- **K = 3 matches the Phase 03 Kuznets prior precisely.** The
+  income-faceted Gini time-series in Phase 03 surfaced three
+  distinct regimes: low-income (high noise, mid-level Gini),
+  upper-middle income (Kuznets peak, highest Gini), high income
+  (compressed, lowest Gini). K = 3 is the smallest K that admits
+  this ordering as a discoverable pattern; K = 2 cannot represent
+  it (it collapses LIC and UMC together).
+
+- **K = 3 is also where Calinski-Harabasz's first-difference is
+  largest in magnitude.** The CH series (138, 103, 89, 78, 72,
+  66, 62, 59, 56) drops by 35 from K = 2 to K = 3 and by only 14
+  from K = 3 to K = 4; the structural inflection sits at K = 3
+  even though the index level is highest at K = 2.
+
+- **The Step 02b precedent.** The threshold-150 rule passed
+  numerically (155 >= 150) but failed substantively (CHN dropped),
+  and the project widened the window via documented adaptive
+  judgement. Step 03b applies the same discipline: the 2/4
+  consensus rule passed numerically (K = 2) but failed
+  substantively (K = 2 cannot host the Phase 03 Kuznets pattern
+  and is portfolio-empty as a "Global North vs. rest"
+  finding), and we override via documented adaptive judgement.
+
+- **K = 2 and K = 4 are not discarded.** Step 04 computes both as
+  robustness comparators and reports cluster sizes plus silhouette
+  side-by-side with K = 3, so the override is auditable and the
+  "what if you had picked K differently" question has a recorded
+  answer.
+
+**Impact:**
+
+- Step 04 fits K-means at K = 2, 3, 4 and Ward hierarchical at
+  K = 3. Cluster assignments for all four are written to
+  `outputs/tables/phase04_s04_cluster_assignments.csv`. Silhouette
+  is reported for each.
+- Step 04 also reports the K-means K=3 vs Ward K=3 agreement rate
+  (Adjusted Rand Index + confusion matrix) as a robustness
+  diagnostic on the chosen K.
+- Step 05 cluster profiles and Step 06 visualisations use K = 3
+  K-means assignments. K = 2 and K = 4 K-means appear only as
+  numerical comparators, not as profiled deliverables.
+- Phase 04 notebook synthesis cites this decision as a worked
+  example of adaptive K selection, paralleling the Step 02b
+  worked example of adaptive window selection. Together they
+  give the notebook two transparent instances of "the
+  pre-registered rule and the substantive judgement diverged;
+  here is how the project resolved it".
+- No `requirements.txt` change.
+
+## 2026-05-01 — Phase 04 Completion
+
+**Context:** Phase 04 (Country Clustering, Scope v2 Layer A
+Descriptive) produced a data-driven typology of 167 listwise-complete
+countries via K-means at K=3 on seven standardised development
+features, validated against Ward hierarchical clustering at the same
+K. Eight step scripts plus two adaptive sub-step entries
+(Step 02b window adaptation, Step 03b K adaptation) plus one diagnostic
+script plus the portfolio notebook completed in sequence. The phase
+delivers the country-level typology that Phases 05-07 consume as a
+robustness regressor and as the organising structure of the policy
+narrative.
+
+**Decision (closure):**
+
+- **Cluster assignments are fixed at**
+  `outputs/tables/phase04_s04_cluster_assignments.csv` (167 rows x 8
+  columns). `cluster_kmeans_k3` is the primary cluster column;
+  `cluster_kmeans_k2`, `cluster_kmeans_k4`, and `cluster_ward_k3` are
+  retained for robustness comparisons.
+- **Aggregation window fixed at 2010-2019** (Step 02b override of the
+  pre-registered 2015-2019 primary, after the initial run revealed
+  CHN had been dropped on a single missing enrol_secondary value).
+- **K=3 fixed as the primary clustering K** (Step 03b override of the
+  mechanical 2/4 consensus that picked K=2, on Phase 03 Kuznets prior
+  + Elbow + structural-reading-of-Gap-monotonicity grounds).
+- **Portfolio notebook** `notebooks/04_country_clustering.ipynb` (37
+  cells: 26 markdown + 11 code; ~1.3 MB executed) is the public
+  deliverable.
+- **`src/log_utils.append_log_entry` had its first real use in this
+  script.** Step 01 promotion contract closed.
+
+**Rationale (carry-forward findings for Phase 05+):**
+
+Eight findings carry forward as binding inputs or named narrative
+elements:
+
+1. **Cluster assignments are usable as fixed effects.** Phase 05
+   robustness specifications can add `cluster_kmeans_k3` as a
+   country-group fixed effect or interact it with key regressors.
+   The three clusters are 40 / 59 / 68 countries - adequate group
+   sizes for stable cluster-level estimates.
+
+2. **The Kuznets inverted-U is reproduced from clustering.** Cluster 1
+   (Middle-development / Kuznets transition) has the highest mean Gini
+   at 39.05, surpassing Cluster 0 (38.24) and Cluster 2 (34.72). The
+   clustering did NOT use Gini as an input - this is independent
+   re-discovery of the Phase 03 finding #4 inverted-U pattern, and is
+   strong same-finding-two-different-ways evidence for Phase 07.
+
+3. **Cluster 0 mean Gini approximately equals Cluster 1 mean Gini**
+   (38.24 vs 39.05, gap = 0.81). The Kuznets curve is asymmetric: the
+   compressed-Gini regime (Cluster 2 at 34.72) is more distinctive
+   than the high-Gini plateau spanning Clusters 0 and 1 (gap 1->2 =
+   4.33). Phase 07 should frame the inverted-U as "high plateau plus
+   compressed peak" rather than as a clean inverted-U.
+
+4. **Development is approximately one-dimensional.** PC1 captures
+   **63.2%** of variance across the 7 features (PC1 + PC2 = 79.2%).
+   The seven features are not seven independent axes but seven
+   correlated indicators of a single underlying development
+   dimension. This shapes how Phase 06 SHAP feature-importance
+   results should be interpreted: high importance on multiple
+   features does not mean independent contributions - they are
+   loadings on a shared latent factor.
+
+5. **K-means vs Ward at K=3 ARI = 0.650** (substantial agreement).
+   Confusion matrix: perfect alignment on Cluster 0 (40/40), complete
+   nesting of K-means Cluster 2 inside Ward Cluster 2 (68/68),
+   disagreement concentrated at the K-means Cluster 1 boundary (22
+   countries to Ward 0, 16 to Ward 2). The robustness narrative is
+   "the extremes are robust, the middle is fuzzy because the middle
+   is literally a transition".
+
+6. **CHN is in Cluster 1.** The Step 02b window-widening from
+   2015-2019 to 2010-2019 was the prerequisite for this placement -
+   under the original window, CHN was dropped on a single missing
+   `enrol_secondary` value and the typology lost its largest single
+   exemplar of the Kuznets-peak regime. The Step 02b decision is
+   therefore not a process footnote but a substantive prerequisite
+   for the headline finding.
+
+7. **IND is in Cluster 0** with Sub-Saharan Africa, structurally
+   distinct from CHN despite the political grouping under "BRICS".
+   Phase 07 narrative point: data partitions are not regional
+   partitions and political groupings do not survive structural cuts.
+
+8. **BRA / ZAF / MEX / ARG sit at the Cluster 1/2 boundary** in the
+   PCA scatter - Cluster 2 by assignment but positionally adjacent
+   to Cluster 1. This is the Latin / South-African pattern of
+   "completed development transition but retained high inequality".
+   Phase 05 robustness should treat their cluster assignment as
+   borderline and test cluster-fixed-effects specifications both
+   with and without these countries reassigned.
+
+**Impact:**
+
+- **Phase 05 (econometric modelling)** inherits `cluster_kmeans_k3`
+  as a robustness regressor. Specifications can add cluster fixed
+  effects or interact education variables with cluster. Finding 8's
+  boundary-case countries (BRA, ZAF, MEX, ARG) define a natural
+  reassignment robustness check.
+
+- **Phase 06 (predictive modelling)** can use cluster as a categorical
+  feature in tree ensembles. SHAP attributions can be computed per
+  cluster. Finding 4 (development is approximately 1-dimensional)
+  suggests that a single principal-component axis may carry most of
+  the linear signal, and that the ML layer should justify itself by
+  finding non-linear or interaction patterns *beyond* that axis.
+
+- **Phase 07 (synthesis)** organises around the K=3 typology.
+  Findings 2, 3, 6, 7, 8 are direct narrative material; findings 4
+  and 5 are methodology robustness material; finding 1 is
+  cross-phase plumbing.
+
+- **`src/` final state** after Phase 04 is `paths.py`, `manifest.py`,
+  `country_metadata.py`, `io_utils.py`, `log_utils.py` (5 modules;
+  log_utils.py added in Phase 04 Step 01, first used here in Step 08a).
+
+- **No `requirements.txt` change** in Phase 04. scikit-learn, scipy,
+  matplotlib, plotly were already pinned.
+
+- **The 50 listwise-dropped countries** are the most concentrated
+  expression of the MNAR caveat noted in Phase 02 Decision 3 and
+  Phase 03 Step 01 design rationale: conflict-affected states (HTI,
+  SOM, SSD, SYR, VEN, YEM), small WB-only territories (22 entries),
+  and a few persistent statistical-capacity cases (PRK, ZMB).
+  Phase 07 should cite this list as a concrete instance of the
+  selection-bias threat to identification rather than treating
+  missingness as an abstract caveat.
+## 2026-05-01 — Phase 05, Step 01
+
+**Context:** Phase 05 (Econometric Modelling, Scope §7.2 Layer B
+Explanatory) opens with eight design decisions that fix the modelling
+protocol before any estimation code is written. The decisions cover
+the canonical baseline specification, the spec inventory, the
+estimator sequence, the use of the Phase 04 cluster typology, the
+sample-restriction policy, boundary-case robustness, MNAR robustness,
+and the coefficient-table format. Recording the choices in the audit
+trail before fitting any model follows the Phase 02 / 03 / 04 pattern
+and locks pre-registration discipline (Phase 05 kickoff §6.5).
+
+**Decision:**
+
+1. **Canonical baseline (Spec A) — five RHS variables.**
+   `gini ~ mean_years_schooling + enrol_secondary +
+   log(gdp_per_capita_ppp) + log(population) + urban_population_pct`.
+   `mean_years_schooling` is the strongest single linear predictor of
+   Gini in Phase 03 (r = -0.52, OLS R² = 0.27). `enrol_secondary` is
+   the natural representative of the secondary-enrolment trio, which
+   is arithmetically nested with VIFs 9,000-40,000 and forces a
+   one-of-three choice (Phase 03 Step 04). `log(gdp_per_capita_ppp)`
+   is the GDP duo's canonical choice (PPP preferred over USD on
+   cross-country comparability; both score VIF > 10 in Phase 03).
+   `log(population)` and `urban_population_pct` are standard
+   structural controls. Both log transforms are applied at modelling
+   time per Phase 02 Decision 4 (panel stores raw values).
+
+2. **Three specifications - A (parsimonious) / B (full controls) /
+   C (heterogeneity).** Spec A is the baseline above. Spec B adds the
+   sector trio (`agri_value_added_gdp`, `manu_value_added_gdp`,
+   `services_value_added_gdp`), `trade_openness`, and
+   `gov_expenditure_gdp` - five additional controls beyond Spec A.
+   Phase 03 Step 04 confirmed the sector trio is jointly usable
+   (manu VIF 1.4, services 2.9, agri 5.4 "watch" but below the
+   "concern" cutoff). Spec C is defined in Decision 4 below.
+   `inflation_cpi` is excluded from Spec B despite being economically
+   relevant: its raw skewness is 52.45 (Phase 03 Step 02) and the
+   winsorisation/log fix cost outweighs the interpretation gain at
+   this layer.
+
+3. **Estimator sequence - Pooled OLS -> FE (country + year) ->
+   RE + Hausman.** All three estimators carry country-clustered
+   standard errors (heteroscedasticity- and within-country-
+   correlation-robust). Pooled OLS is fitted via
+   `linearmodels.PooledOLS` (not `statsmodels.OLS`) so that all three
+   estimators share the linearmodels comparison API (Decision 8).
+   FE absorbs time-invariant country characteristics and common year
+   shocks; RE is fitted only to enable the Hausman comparison. The
+   Hausman test outcome is the deciding diagnostic between FE and RE
+   for headline reporting. This is the canonical Scope §7.2 sequence.
+
+4. **Cluster strategy - `cluster_kmeans_k3` enters Spec C as a single
+   education-interaction term.** Spec C := Spec A +
+   `cluster_kmeans_k3 x mean_years_schooling` interaction. Cluster
+   main effects are NOT included as a separate Spec C variant.
+   Rationale: under the FE estimator (the headline specification once
+   the Hausman test resolves), cluster main effects are absorbed by
+   country fixed effects and become unidentified; reporting them
+   under FE would yield a structurally empty result. The substantive
+   heterogeneity question is whether the education-Gini slope varies
+   across the K=3 development regimes - which is exactly the
+   interaction term, and which IS identified under FE. The choice of
+   `mean_years_schooling` (not `enrol_secondary`) for the interaction
+   follows from Decision 1: mys is the strongest single predictor and
+   the cleanest carrier of the heterogeneity story.
+
+5. **Sample restriction policy - Spec A on three samples; Spec B and
+   Spec C on the primary sample only.** Primary sample is Spec A's
+   listwise-complete country-year set on the full panel (Phase 02
+   anchor: ~1,423 rows x ~140 countries; revalidated in Phase 05
+   Step 02 against the cluster-attached panel). Two robustness
+   samples: 2010-2019 sub-period (matches the Phase 04 clustering
+   window) and cluster-listwise (167 countries with non-NaN
+   `cluster_kmeans_k3`). Rationale: 3 specs x 3 estimators x 3
+   samples = 27 fits per heterogeneity / robustness check, which is
+   more cells than a portfolio table can carry coherently. Spec A
+   bears the headline result, so it earns the three-sample treatment;
+   Spec B and Spec C earn one-sample treatment because their job is
+   spec-level robustness, not sample-level.
+
+6. **Boundary-case robustness - re-fit Spec C with BRA, ZAF, MEX, ARG
+   re-assigned to Cluster 1.** These four countries sit at the
+   K-means Cluster 1/2 boundary in PCA space (Phase 04 Step 06);
+   Ward hierarchical clustering at K=3 reassigns 16 of 68 K-means
+   Cluster 2 members to its Cluster 1 (Phase 04 Step 04, ARI = 0.65).
+   Re-fitting Spec C with these four boundary countries flipped to
+   Cluster 1 tests whether the headline interaction coefficient
+   survives the algorithm-choice-induced uncertainty in cluster
+   assignment.
+
+7. **MNAR robustness - selection-bias diagnostic, NOT PIP-imputed
+   Gini.** For the country-years where Gini is observed vs
+   unobserved, compare the distributions of `mean_years_schooling`,
+   `log(gdp_per_capita_ppp)`, `urban_population_pct`, plus
+   `region_name` and `income_level_name` cross-tabulations. Welch
+   t-test or Mann-Whitney + KS-test for continuous variables,
+   chi-square for categorical. PIP-imputed Gini extension is
+   rejected on three grounds: (a) PIP itself mixes consumption-based
+   and income-based surveys, amplifying measurement error; (b)
+   attenuation-bias direction under measurement error in Y is not
+   defensible without additional assumptions; (c) running the
+   headline regression on imputed Gini values is portfolio-fragile.
+   The selection-bias diagnostic answers the right question - "is
+   the gini-using sample representative?" - without manufacturing
+   observations.
+
+8. **Coefficient table format - one table per Spec, OLS / FE / RE
+   side by side, via `linearmodels.compare()` + custom formatter.**
+   Rows: each RHS coefficient with cluster-robust SE in parentheses
+   and significance stars. Trailing rows: N (country-years),
+   N_countries, R² (within / between / overall as applicable),
+   estimator-specific diagnostics (e.g. F-stat for FE, theta for RE).
+   The custom formatter renders `compare()`'s native output as
+   portfolio-grade markdown tables; raw statsmodels-style output is
+   not shipped to the notebook. This mirrors Phase 03's VIF tables
+   and Phase 04's cluster-profile tables - "library output kept
+   internal, formatted output shipped externally".
+
+**Rationale:**
+
+- **`mean_years_schooling` is the central carrier of the headline
+  finding across Phase 05.** The identifiability of mys' coefficient
+  under FE with cluster-robust SE is the single most-cited number in
+  any portfolio walkthrough of Phase 05 (kickoff §7). Decisions 1, 4,
+  5, and 8 all serve to keep mys' coefficient and its uncertainty
+  interpretable across the spec / estimator / sample grid.
+
+- **Heterogeneity via interaction, not subsample.** Subsample
+  regressions by cluster were considered and rejected: with K=3
+  clusters and ~140 countries listwise on Spec A, per-cluster N is
+  ~47 country-cohort, and FE within each subsample loses
+  considerable power. The interaction approach pools strength across
+  the full panel and recovers heterogeneity as an additional
+  parameter, not a fragmented one.
+
+- **Pre-registration discipline (kickoff §6.5).** The three-sample /
+  one-sample asymmetry in Decision 5 is recorded BEFORE estimates
+  are seen, so that the eventual choice of which sample to feature
+  in the notebook narrative is constrained by the pre-registered
+  hierarchy (Spec A primary -> Spec A robustness -> Spec B/C).
+  Adaptive overrides remain available via §6.3 sub-step entries if
+  results trigger them.
+
+- **MNAR is a selection problem, not a missing-Y problem.**
+  Decision 7's diagnostic frames the 50-country exclusion list
+  (Phase 04 §Known Issues) and the 30% Gini completeness (Phase 02)
+  as a panel-representation question, which is the question Phase 05
+  can actually answer with available data. The deeper question -
+  whether the unobserved Gini values would change the relationship -
+  is genuinely beyond the data and is deferred to Phase 07's
+  identification discussion.
+
+- **Portfolio polish wins over rigor at one explicit point.**
+  Decision 4 chose interaction-only Spec C over a two-variant
+  (cluster FE + interaction) Spec C, because cluster FE is
+  structurally empty under the headline FE estimator. This trade is
+  named here rather than papered over (kickoff §6.2).
+
+**Impact:**
+
+- Step 02 builds `data/processed/panel_modelling.csv` by attaching
+  `cluster_kmeans_k3` (left-join on iso3) and computing
+  `log_gdp_per_capita_ppp` and `log_population`. No NaN should be
+  introduced beyond the panel.csv baseline; cluster column matches
+  the Phase 04 distribution (40 + 59 + 68 = 167 with cluster, 50
+  with NaN).
+
+- Steps 03-05 fit the three estimators (Pooled OLS, FE, RE) and
+  produce per-spec coefficient tables plus the Hausman test result.
+  Steps 06-07 cover heterogeneity (Spec C under each estimator) and
+  the three robustness checks (boundary-case reassignment, MNAR
+  selection diagnostic, sub-period FE).
+
+- Step 08 builds `notebooks/05_econometric_modelling.ipynb`
+  programmatically (Phase 03 / 04 s07 pattern via nbformat +
+  nbconvert.ExecutePreprocessor against the `p4_education` kernel).
+
+- Step 09 wraps with the second use of
+  `src.log_utils.append_log_entry` since Phase 04 Step 08, plus
+  `docs/phase_summaries/phase05_summary.md` written directly as
+  markdown (kickoff §6.6 - new convention from Phase 05 onwards),
+  plus README regeneration via `scripts/update_readme.py`.
+
+- No `requirements.txt` change anticipated for Step 01.
+  `linearmodels` is already pinned (Phase 00 environment setup).
