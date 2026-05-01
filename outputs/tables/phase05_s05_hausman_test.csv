@@ -1,0 +1,3 @@
+spec,statistic,df,pvalue,conclusion,inversion_method,eigvals_min,eigvals_max,n_common_vars
+A,5.111707140318808,5,0.4024000934882326,Fail to reject H0: RE is consistent and efficient,inv,5.8353762783828934e-05,8.415111596437677,5
+B,-15.861733708743825,10,1.0,Inconclusive (negative or non-finite statistic),pinv,-0.0006440663221738498,8.596668221773497,10

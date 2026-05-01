@@ -1,0 +1,22 @@
+check,subgroup,item_kind,item_name,value,std_error,statistic,df,pvalue,ci_low,ci_high,n_obs,n_countries,notes
+mundlak,Spec_A,wald_test,country_means_jointly_zero,,,9.840539634461674,5.0,0.0798816455049044,,,1642.0,153.0,inversion=inv; Reject H0 at 10% only
+mundlak,Spec_B,wald_test,country_means_jointly_zero,,,41.667423227046655,10.0,8.592342318314294e-06,,,1520.0,134.0,inversion=inv; Reject H0 at 5%: prefer FE
+boundary_case,baseline,slope,cluster_0,-0.8008544937798633,0.5320731461479711,-1.5051586413969167,,0.13248547125036847,-1.844507393797651,0.24279840623792437,1605.0,,(baseline)
+boundary_case,baseline,slope,cluster_1,-1.1864952143837315,0.460660780247055,-2.575637573807363,,0.010096768340858375,-2.0900739097377574,-0.2829165190297056,1605.0,,mean_years_schooling:C(cluster_kmeans_k3)[T.1]
+boundary_case,baseline,slope,cluster_2,-0.32515180529826465,0.4016318121841761,-0.8095768199486149,,0.4183067407467891,-1.1129461312476596,0.46264252065113026,1605.0,,mean_years_schooling:C(cluster_kmeans_k3)[T.2]
+boundary_case,reassigned,slope,cluster_0,-0.733235359338084,0.5363569700380232,-1.3670659659482076,,0.17180133236594508,-1.7852909108679533,0.31882019219178526,1605.0,,(baseline)
+boundary_case,reassigned,slope,cluster_1,-1.1547768744202858,0.43375077623125435,-2.662305032520832,,0.007840394706268183,-2.005572030642701,-0.30398171819787045,1605.0,,mean_years_schooling:C(cluster_kmeans_k3)[T.1]
+boundary_case,reassigned,slope,cluster_2,0.20064789423320584,0.41085045746952914,0.48837208425911743,,0.6253548624824232,-0.6052286558538801,1.0065244443202919,1605.0,,mean_years_schooling:C(cluster_kmeans_k3)[T.2]
+mnar_selection,continuous_cy,welch_t,mean_years_schooling,2.6798983281237376,,31.249977778527263,,7.505887900778986e-187,,,1642.0,4439.0,mean_A=9.8439; mean_B=7.1640
+mnar_selection,continuous_cy,mann_whitney,mean_years_schooling,,,5400318.0,,1.6249665950378701e-183,,,1642.0,4439.0,
+mnar_selection,continuous_cy,ks_test,mean_years_schooling,,,0.3498993941146723,,6.256332524756972e-131,,,1642.0,4439.0,
+mnar_selection,continuous_cy,welch_t,log_gdp_per_capita_ppp,0.7325818926839425,,24.814079404483643,,2.6841204910730445e-125,,,1642.0,4955.0,mean_A=9.9128; mean_B=9.1802
+mnar_selection,continuous_cy,mann_whitney,log_gdp_per_capita_ppp,,,5527115.0,,1.6830357808026397e-105,,,1642.0,4955.0,
+mnar_selection,continuous_cy,ks_test,log_gdp_per_capita_ppp,,,0.29736311333057197,,8.204283020779698e-97,,,1642.0,4955.0,
+mnar_selection,continuous_cy,welch_t,urban_population_pct,9.811662154861288,,17.381217851574863,,4.626084846490643e-65,,,1642.0,5736.0,mean_A=65.3945; mean_B=55.5829
+mnar_selection,continuous_cy,mann_whitney,urban_population_pct,,,5845578.0,,2.031966512646385e-50,,,1642.0,5736.0,
+mnar_selection,continuous_cy,ks_test,urban_population_pct,,,0.2844462055152661,,1.3202545502968082e-91,,,1642.0,5736.0,
+mnar_selection,categorical_country,chi2,region_name,,,14.162871983564033,6.0,0.027868775536051774,,,153.0,64.0,n_categories=7; resolved_col=region_name
+mnar_selection,categorical_country,chi2,income_level_name,,,17.29223483776945,4.0,0.0016958657111288602,,,153.0,64.0,n_categories=5; resolved_col=income_level_name
+subperiod_2010_2019,Spec_A_FE,coef,mean_years_schooling,-0.8217427427188044,0.5477641037905385,-1.5001763296140223,,0.13411759350816732,-1.8976052461188417,0.2541197606812329,728.0,139.0,R²_within=+0.0805
+subperiod_2010_2019,Spec_A_RE,coef,mean_years_schooling,-0.7424983192995263,0.30234589990900157,-2.4557909319193656,,0.014295026920409848,-1.3360930305652763,-0.14890360803377622,728.0,139.0,R²_within=+0.0974

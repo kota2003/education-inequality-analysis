@@ -1145,3 +1145,337 @@ and locks pre-registration discipline (Phase 05 kickoff §6.5).
 
 - No `requirements.txt` change anticipated for Step 01.
   `linearmodels` is already pinned (Phase 00 environment setup).
+## 2026-05-02 — Phase 05, Step 07b (Adaptive Override)
+
+**Context:** Step 01 Decision 3 pre-registered the estimator
+sequence Pooled OLS -> FE -> RE + Hausman, with the Hausman test
+named as "the deciding diagnostic between FE and RE for headline
+reporting." Step 05 executed this sequence and produced two
+heterogeneous results:
+
+- Spec A Hausman: chi^2 = 5.11, df = 5, p = 0.4024.
+  Conclusion: fail to reject H0 -> RE is consistent and efficient.
+- Spec B Hausman: chi^2 = -15.86, df = 10, p = 1.0000.
+  Conclusion: numerically degenerate. The covariance-difference
+  matrix Sigma_FE - Sigma_RE was near-PSD in finite sample under
+  cluster-robust SE (min eigenvalue -6.4e-04), the Moore-Penrose
+  pseudoinverse fell back, and the resulting quadratic form was
+  negative. This is a known failure mode of the Hausman test under
+  clustered SE in panels of moderate cluster count (~140
+  countries) and is not informative about FE-vs-RE preference.
+
+To address the Spec B degeneracy, Step 07 Check 1 implemented a
+Mundlak alternative-Hausman test - country-mean of each time-varying
+RHS added as auxiliary regressors in a RandomEffects specification,
+followed by a Wald test on the joint zero of those mean coefficients
+(b' V^-1 b ~ chi^2(q)). Mundlak is asymptotically equivalent to
+Hausman under H0 and is numerically stable under cluster-robust SE.
+The Mundlak results:
+
+- Spec A Mundlak: Wald = 9.84, df = 5, p = 0.0799.
+  Conclusion: borderline reject at 10% only.
+- Spec B Mundlak: Wald = 41.67, df = 10, p < 0.0001.
+  Conclusion: strong reject H0 -> FE preferred.
+
+The two asymptotically equivalent tests therefore disagree
+materially on Spec B and weakly disagree on Spec A. Spec A
+results are individually inconclusive; Spec B Mundlak is the only
+unambiguous diagnostic on the table and points toward FE.
+
+**Decision (Override):** The headline-estimator choice rule
+pre-registered in Step 01 Decision 3 is replaced with a
+dual-headline (technically tri-) reporting structure. Pooled OLS,
+FE, and RE are all reported in parallel as the headline result for
+each specification, rather than selecting one as definitive based
+on Hausman alone. The notebook (Step 08) and phase summary
+(Step 09) present the three estimators side-by-side with
+appropriate context for each, rather than singling out RE based on
+Step 05's Hausman alone.
+
+**Rationale:**
+
+- **The Mundlak-Hausman conflict is a real informational signal.**
+  The Spec B Mundlak p < 0.0001 indicates that country-specific
+  unobservables are correlated with the regressors when sector
+  trio, trade_openness, and gov_expenditure_gdp are included -
+  the RE identifying assumption cov(alpha_i, X_it) = 0 fails for
+  the rich-controls specification. Spec A Mundlak p = 0.0799 is
+  borderline, consistent with the Spec A Hausman p = 0.40 being
+  inconclusive rather than supportive of RE. Treating Step 05's
+  Hausman result as definitive would silently dismiss this signal.
+
+- **Single-estimator selection over-claims under conflicting
+  evidence.** Selecting RE as headline based solely on Step 05's
+  Hausman result for Spec A would over-claim, given the Spec B
+  Mundlak rejection. Selecting FE based solely on Mundlak Spec B
+  would also over-claim, given that Spec A is borderline and that
+  the FE point estimate is statistically null (mys coefficient
+  -0.38, p=0.37). The honest analytical position is that the data
+  do not uniquely identify a single best aggregate estimator at
+  this layer; the three estimators are reporting different
+  aggregations of the same evidence.
+
+- **The reconciliation IS the headline finding.** The strong
+  negative Pooled OLS coefficient (-1.328***) attenuates under FE
+  (-0.384, p=0.37) and partially recovers under RE (-0.688*,
+  p=0.016). This pattern - between-country identification produces
+  a strong negative association; within-country identification
+  loses it; GLS-combined identification recovers an intermediate
+  value with theta=0.82 - is the central reconciliation story
+  Phase 05 was designed to tell. Burying two of three estimators
+  in an appendix would suppress that story (kickoff §6.7,
+  "robustness via comparison, not single numbers").
+
+- **The Cluster 1 heterogeneity finding stands independently.**
+  Step 06 RE Spec C produced a Cluster 1 within-country slope of
+  -1.19, p = 0.010; Step 07 boundary-reassignment produced -1.15,
+  p = 0.008. The finding is robust across (i) the K-means/Ward
+  algorithm-induced uncertainty in cluster boundaries (Phase 04 ARI
+  = 0.65), (ii) the +0.04-point shift from BRA/ZAF/MEX/ARG
+  reassignment, and (iii) the choice of estimator as far as the
+  interaction sign and direction are concerned. It will continue
+  to be reported as the central heterogeneity finding of Phase 05
+  irrespective of which aggregate estimator is foregrounded.
+
+- **Time-stamp discipline (kickoff §6.5).** This override is
+  documented BEFORE Step 08 notebook construction so the audit
+  trail shows the structural choice was deliberate rather than
+  driven by visual inspection of notebook drafts. The override
+  date precedes the notebook build date in the PROJECT_LOG, which
+  is what pre-registration is for.
+
+**Impact:**
+
+- **Step 08 notebook structure.** Coefficient tables present
+  Pooled OLS / FE / RE side-by-side via `linearmodels.compare()`,
+  with equal emphasis. The Cluster 1 heterogeneity table is its
+  own headline subsection. The notebook synthesis question shifts
+  from "What is THE headline coefficient?" to "How does the
+  education-Gini relationship look under three identification
+  strategies, and what is the heterogeneity layer below the
+  aggregate?".
+
+- **Step 09 phase summary structure.** Opens with the three-
+  estimator reconciliation as the primary aggregate finding,
+  followed by Cluster 1 heterogeneity as a separate result. The
+  Mundlak-Hausman conflict is described as a methodological
+  tension surfaced by the Phase 05 design, not as an error.
+
+- **Headline-coefficient interpretation.** The kickoff §7
+  framing - "the single most-cited number from Phase 05 in any
+  portfolio walkthrough" - is reframed: the most-cited number is
+  no longer a single coefficient under FE but the comparison
+  across the three estimators (-1.33 / -0.38 / -0.69), with the
+  Cluster 1 heterogeneity as a paired secondary headline (-1.19
+  for middle-development countries, RE Spec C).
+
+- **No additional data work required.** All quantitative anchors
+  needed by Step 08 are present in the existing s03/s04/s05/s06/s07
+  output CSVs. This override is documentary, not computational.
+
+- **Override typology.** This is the second documented adaptive
+  override in the project. The Phase 04 overrides (Step 02b
+  sample-window widening, Step 03b K-selection) were technical:
+  pre-registered numerical rules passed but qualitative inspection
+  triggered an adjustment. The Phase 05 override is interpretive:
+  no pre-registered rule failed; two pre-registered diagnostics
+  returned conflicting answers. The override is the choice of how
+  to report the conflict honestly. Future projects in the
+  portfolio may cite this entry as a template for handling
+  asymptotically-equivalent-but-empirically-conflicting
+  diagnostics.
+## 2026-05-02 — Phase 05 Completion
+
+**Context:** Phase 05 (Econometric Modelling, Scope §7.2 Layer B
+Explanatory) is complete. The phase delivered the first explanatory
+layer of the three-layer analytical framework: panel-econometric
+estimation of the education-Gini relationship under three
+identification strategies (Pooled OLS, two-way FE, RE) with country-
+clustered standard errors, plus heterogeneity analysis through the
+Phase 04 cluster typology and four robustness checks. The portfolio-
+facing deliverable is `notebooks/05_econometric_modelling.ipynb`
+(23 cells, fully executed, three figures embedded).
+
+The phase contained one mid-flight adaptive override
+(Step 07b, dated 2026-05-02): the pre-registered "Hausman picks one
+estimator" rule was replaced with a tri-headline (Pooled OLS / FE /
+RE) reporting structure after the Mundlak alternative-Hausman test
+returned conflicting answers under cluster-robust SE. The override
+is the second documented adaptive override in the project (after
+Phase 04 Steps 02b and 03b) and the first interpretive one - the
+data did not fail a pre-registered rule; two pre-registered tools
+returned different verdicts. The override entry stands as the
+template for handling asymptotically-equivalent-but-empirically-
+conflicting diagnostics in future projects.
+
+**Phase 05 Step Audit Trail (compressed):**
+
+- **Step 01 — Eight design decisions** locked before any estimation
+  code. Spec A (parsimonious, 5 RHS), Spec B (full controls, 10
+  RHS), Spec C (mys × cluster_kmeans_k3 interaction). Country-
+  clustered SE throughout. PROJECT_LOG entry: 2026-05-01.
+
+- **Step 02 — Modelling-ready dataset built.** `panel_modelling.csv`
+  (7,378 x 30): 24 panel originals + log_gdp_per_capita_ppp,
+  log_population + 4 cluster columns from Phase 04. Spec A listwise
+  sample: 1,642 country-years from 153 countries.
+
+- **Step 03 — Pooled OLS (linearmodels.PooledOLS, country-clustered
+  SE).** Spec A mys = -1.328*** (SE 0.275, p<0.001, CI [-1.87,
+  -0.79]); Spec B mys = -1.204*** (SE 0.234, p<0.001). R² overall
+  0.36 / 0.51, but R² within = 0.077 / -0.043 - signalling
+  Pooled OLS draws its identification almost entirely from
+  between-country variation.
+
+- **Step 04 — Two-way FE (linearmodels.PanelOLS, country + year
+  FE).** Spec A mys = -0.384 (SE 0.425, p=0.366, CI [-1.22,
+  +0.45]) - within-country effect is statistically null. Spec B
+  mys = -0.272 (p=0.520). R² within 0.115 / 0.083. Spec C cluster-
+  main-effect dummies absorbed by EntityEffects as expected
+  (`drop_absorbed=True`); only the two interaction terms identified.
+
+- **Step 05 — RE + Hausman.** Spec A RE: mys = -0.688* (SE 0.285,
+  p=0.016); theta = 0.82, indicating strong FE-weighted GLS
+  combination. Spec A Hausman p = 0.402 (fail to reject - prefer
+  RE). Spec B Hausman degenerate (statistic = -15.86, covariance
+  difference matrix non-PD under cluster-robust SE).
+
+- **Step 06 — Heterogeneity (Spec C, RE + FE per-cluster slopes via
+  delta method).** RE Spec C per-cluster slopes: Cluster 0 = -0.80
+  (p=0.13); Cluster 1 = -1.19* (p=0.010); Cluster 2 = -0.33
+  (p=0.42). Cluster 1 is the middle-development / Kuznets-transition
+  group from Phase 04; the within-country slope of education on
+  Gini is significant only here.
+
+- **Step 07 — Four robustness checks.** (1) Mundlak alternative-
+  Hausman: Spec A Wald=9.84, p=0.080 (borderline reject); Spec B
+  Wald=41.67, p<0.0001 (strong reject - prefer FE), in conflict
+  with Step 05 Hausman Spec A result. (2) Boundary-case reassignment
+  (BRA/ZAF/MEX/ARG -> Cluster 1): Cluster 1 RE slope -1.19 ->
+  -1.15, significance unchanged - finding robust to algorithm-
+  induced cluster ambiguity. (3) MNAR selection diagnostic: gini-
+  using sample is +2.7 years more educated, +0.7 log-units richer,
+  +9.8pp more urbanised; high-income microstates are over-
+  represented in the excluded sample (chi^2 p=0.0017 country-
+  level). (4) Sub-period 2010-2019 (Spec A): RE mys = -0.74*
+  (p=0.014), within sampling error of full-panel RE.
+
+- **Step 07b — Adaptive override of headline-estimator rule.** Triggered
+  by Step 07 Check 1's Mundlak-Hausman conflict. New rule: report
+  Pooled OLS / FE / RE in parallel; treat the three-estimator
+  reconciliation pattern as the primary aggregate finding rather
+  than promoting any single estimator's coefficient. The Cluster 1
+  heterogeneity finding stands independently regardless of which
+  aggregate estimator is foregrounded. PROJECT_LOG entry:
+  2026-05-02.
+
+- **Step 08 — Portfolio notebook.** `notebooks/05_econometric_modelling.ipynb`
+  programmatically built via nbformat and executed via
+  nbconvert.ExecutePreprocessor. 23 cells (12 markdown + 11 code).
+  Three figures saved to `outputs/figures/`: forest plot of the
+  three-estimator headline, per-cluster bar chart with Cluster 1
+  highlight, MNAR income-level contingency stacked bar.
+
+- **Step 09 — Phase wrap.** This entry plus
+  `docs/phase_summaries/phase05_summary.md` (written directly as
+  markdown - new convention from Phase 05 onwards per kickoff §6.6
+  doc generation routing) plus `scripts/update_readme.py`
+  regenerated.
+
+**Findings (eight carry-forward anchors for Phase 06+):**
+
+1. **Aggregate Pooled OLS / FE / RE for Spec A:** -1.328*** /
+   -0.384 / -0.688* respectively. The 71% attenuation from Pooled
+   OLS to FE indicates the education-Gini association is
+   predominantly a between-country phenomenon, consistent with
+   Phase 04's PC1 = 63.2% one-dimensional development gradient.
+
+2. **theta = 0.82 in Spec A RE** - strongly weighted toward FE.
+   The RE coefficient (-0.688) is identification-by-mixture;
+   neither the Pooled OLS nor the FE result is its parent.
+
+3. **Mundlak-Hausman conflict for Spec B** - the cluster-robust SE
+   environment makes Hausman numerically unstable in panels of
+   moderate cluster count (~140), and the Mundlak Spec B p<0.0001
+   indicates that with rich controls the RE identifying assumption
+   (cov(alpha_i, X_it) = 0) fails. Phase 06+ should default to
+   Mundlak rather than Hausman as the FE-vs-RE diagnostic.
+
+4. **Cluster 1 heterogeneity finding (RE Spec C):** within-country
+   slope of mys on Gini = -1.19, p = 0.010 (95% CI [-2.09, -0.28]).
+   Boundary-reassigned: -1.15** (p=0.008). This is the primary
+   quantitative contribution of Phase 05's explanatory layer
+   beyond the Phase 03/04 descriptive anchors. Cluster 1 is the
+   "middle-development / Kuznets transition" group identified in
+   Phase 04 (mean Gini 39.05, mean mys 8.85 years, mean
+   log(gdp_ppp) 9.37 ~ \$11,700).
+
+5. **Cluster 0 and Cluster 2 within-country slopes are not
+   distinguishable from zero** under either FE or RE. Cluster 0:
+   too little education variation to identify (mys mean 4.22
+   years). Cluster 2: education near-saturated (mys mean 11.36),
+   diminishing returns to expansion.
+
+6. **Sub-period stability.** Spec A RE coefficient on the 2010-
+   2019 sub-period (-0.74, p=0.014) matches the full-panel RE
+   coefficient (-0.69, p=0.016) within a sampling error. The
+   relationship is not a particular-decade artefact.
+
+7. **MNAR is non-monotonic in income.** The gini-using sample is
+   richer / more educated on average, but high-income microstates
+   are over-represented in the excluded sample. The headline
+   coefficient describes "countries with sustained Gini reporting"
+   - predominantly middle-income economies with established
+   statistical infrastructure - rather than the global universe.
+
+8. **Spec A primary listwise sample = 1,642 country-years from
+   153 countries** (revised from the Phase 02 anchor estimate of
+   ~1,423 / ~140; the difference comes from Spec A's use of one
+   enrolment variable rather than three). This is the canonical
+   Phase 05 sample size for Phase 06 power calculations.
+
+**Impact on subsequent phases:**
+
+- **Phase 06 (Causal Inference / Identification)** inherits a
+  panel-tested explanatory result that is statistically null on
+  within-country dynamics aggregately but significant for the
+  middle-development cluster. Phase 06's central question is
+  whether the Cluster 1 finding survives an instrumental-variable
+  or natural-experiment design. Candidate strategies:
+  compulsory-schooling reforms (Heckman & Vytlacil-style IV),
+  regression discontinuity at education-policy thresholds,
+  difference-in-differences around inflection points in
+  education spending. Phase 06 should NOT use Phase 05's
+  aggregate coefficient as a target for replication; the within-
+  Cluster-1 estimate (-1.19) is the substantively relevant target.
+
+- **Carry-forward caveats** propagate from Phase 04 §Known Issues
+  (50-country MNAR list, BRA/ZAF/MEX/ARG boundary cases, country-
+  level aggregation flattening, 2010-19 transition smearing). Two
+  Phase 05-specific caveats added:
+  (a) cluster SE Hausman degeneracy - replace with Mundlak;
+  (b) cross-country Gini heterogeneity (consumption-vs-income-based
+  surveys) is partially insulated under within-country
+  identification but remains a concern for cross-cluster
+  comparisons.
+
+- **Methodological deliverable.** The Step 07b override entry
+  documents the dual/tri-headline reporting pattern as a
+  reusable convention for handling diagnostic conflict under
+  cluster-robust SE in moderate-cluster-count panels. This is
+  itself a portfolio asset.
+
+**Files produced:**
+
+- `notebooks/05_econometric_modelling.ipynb`
+- `data/processed/panel_modelling.csv`
+- 7 output CSVs (`phase05_s03..s07_*.csv`)
+- 3 figures (`phase05_s08_*.png`)
+- 9 step scripts (`phase05_s01..s09`) plus 1 sub-step
+  (`phase05_s07b_override_log.py`) plus 1 wrap
+  (`phase05_s09_append_wrap_log.py`)
+- 3 PROJECT_LOG entries (Step 01, Step 07b, this entry)
+- `docs/phase_summaries/phase05_summary.md` written directly per
+  kickoff §6.6 doc-generation routing convention
+- `scripts/update_readme.py` regenerated to flip Phase 05 to ✅
+  and add the Phase 05 Findings entry

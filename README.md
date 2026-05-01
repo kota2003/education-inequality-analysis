@@ -3,7 +3,7 @@
 
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
-*Last updated: 2026-05-01*
+*Last updated: 2026-05-02*
 
 ## Overview
 
@@ -101,7 +101,7 @@ education-inequality-analysis/
 ├── .gitignore
 ├── data/
 │   ├── raw/                   # Original data + manifest.yaml (gitignored)
-│   └── processed/             # panel.csv, country_features*.csv (analytical artefacts)
+│   └── processed/             # panel.csv, country_features*.csv, panel_modelling.csv
 ├── notebooks/                 # Phase-aligned portfolio notebooks (01..07)
 ├── src/                       # Reusable functions and classes
 │   ├── paths.py               #   project-root locator
@@ -163,6 +163,9 @@ python scripts/phase02_s05_missingness_report.py
 
 # Phase 04 - country-level feature matrix (depends on panel.csv)
 python scripts/phase04_s02_build_country_features.py
+
+# Phase 05 - modelling-ready panel (depends on panel.csv + cluster_assignments.csv)
+python scripts/phase05_s02_build_modelling_data.py
 ```
 
 ### 5. View the notebooks
@@ -179,13 +182,13 @@ kernel, and execute notebooks in numerical order (01 → 07).
 | 02 | Data Cleaning & Integration | ✅ Complete |
 | 03 | Exploratory Data Analysis | ✅ Complete |
 | 04 | Country Clustering | ✅ Complete |
-| 05 | Econometric Modelling | ⏳ Pending |
+| 05 | Econometric Modelling | ✅ Complete |
 | 06 | Predictive Modelling & Interpretability | ⏳ Pending |
 | 07 | Synthesis & Policy Discussion | ⏳ Pending |
 
 ## Findings
 
-### Available now (descriptive infrastructure & typology, Phases 01–04)
+### Available now (descriptive layer & explanatory layer, Phases 01–05)
 
 - **Phase 01** — [`01_data_collection.ipynb`](notebooks/01_data_collection.ipynb)
   documents the raw layer: a machine-readable manifest of 19 declared variables
@@ -223,10 +226,33 @@ kernel, and execute notebooks in numerical order (01 → 07).
   approximately one-dimensional in this space. Cluster assignments are
   exposed in [`outputs/tables/phase04_s04_cluster_assignments.csv`](outputs/tables/phase04_s04_cluster_assignments.csv)
   and feed Phase 05 robustness specifications as cluster fixed effects.
+- **Phase 05** — [`05_econometric_modelling.ipynb`](notebooks/05_econometric_modelling.ipynb)
+  estimates the education–Gini relationship across three identification
+  strategies on the 1,642-country-year analytical sample (153 countries,
+  Spec A listwise complete): Pooled OLS, two-way Fixed Effects (country +
+  year), and Random Effects, all with country-clustered standard errors.
+  The coefficient on `mean_years_schooling` attenuates from −1.33\*\*\*
+  (Pooled OLS, between-country identification) to a statistically null
+  −0.38 (FE, within-country only) and partially recovers to −0.69\*
+  under RE (θ = 0.82 GLS combination). A mid-phase adaptive override
+  (PROJECT_LOG Step 07b) replaced the pre-registered "Hausman picks one
+  estimator" rule with tri-headline reporting after the Mundlak
+  alternative-Hausman test returned conflicting answers under cluster-
+  robust SE. Heterogeneity analysis surfaces the substantive
+  finding: **Cluster 1 (middle-development / Kuznets transition) shows
+  a within-country slope of −1.19 (p = 0.010), robust to BRA/ZAF/MEX/ARG
+  boundary reassignment (−1.15\*\*, p = 0.008)**. This is the econometric
+  corroboration, from a within-country identification strategy, of the
+  Phase 04 Kuznets finding. The robustness suite confirms 2010–2019
+  sub-period stability (RE −0.74\*) and surfaces a non-monotonic MNAR
+  pattern (high-income microstates over-represented in the excluded
+  sample, χ² p = 0.0017 country-level). Coefficient tables and per-
+  cluster slopes are exposed in [`outputs/tables/`](outputs/tables/);
+  three figures (forest plot, per-cluster bar, MNAR contingency) are in
+  [`outputs/figures/`](outputs/figures/).
 
-### Coming soon (analytical findings, Phases 05–07)
+### Coming soon (predictive modelling & policy synthesis, Phases 06–07)
 
-- *Headline results from econometric models (Phase 05)*
 - *Top drivers of inequality identified by SHAP (Phase 06)*
 - *Cross-method comparison and policy-relevant takeaways (Phase 07)*
 
