@@ -1,11 +1,11 @@
-# Education and Income Inequality
+# 📘 Education and Income Inequality
 ### A Cross-Country Panel Analysis
 
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
 *Last updated: 2026-05-04*
 
-## Overview
+## 📌 Overview
 
 Education is widely considered a lever for reducing income inequality, but the
 empirical relationship is complicated by confounders such as economic
@@ -28,7 +28,7 @@ Causal identification is discussed but not claimed; the project sets explicit
 boundaries on what can and cannot be concluded from observational cross-country
 panel data.
 
-## Research Questions
+## 🔍 Research Questions
 
 1. Is higher educational attainment associated with lower income inequality
    across countries?
@@ -41,7 +41,7 @@ panel data.
    flexible machine-learning models?
 6. What causal claims can and cannot be made from this analysis?
 
-## Data
+## 🗄️ Data
 
 | Source | Use |
 |---|---|
@@ -56,7 +56,7 @@ panel data.
 - **Country-level analytical typology:** 167 countries (Phase 04, 2010–2019 means)
 - **Analytical sample:** 1,000–3,000 country-year rows depending on specification (Gini-binding)
 
-## Methods
+## 🧪 Methods
 
 **Descriptive layer**
 - Distribution and time-trend analysis
@@ -79,7 +79,7 @@ panel data.
 Formal causal identification (IV, DiD, synthetic control) is out of scope but
 discussed as future work.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - **Language:** Python 3.11
 - **Data handling:** pandas, numpy, pycountry
@@ -90,7 +90,7 @@ discussed as future work.
 - **Environment:** conda + pinned `requirements.txt`
 - **Version control:** git with per-phase branches
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 education-inequality-analysis/
@@ -116,10 +116,12 @@ education-inequality-analysis/
 │   └── models/                #   trained models (Phase 06+)
 └── docs/
     ├── project_scope.md       # Canonical project scope
+    ├── findings.md            # Condensed standalone findings narrative
+    ├── methodology.md         # Workflow and conventions reference
     └── phase_summaries/       # Per-phase handoff files (gitignored)
 ```
 
-## Installation and Usage
+## 🚀 Installation and Usage
 
 ### 1. Clone the repository
 
@@ -176,7 +178,7 @@ python scripts/phase06_s02_build_ml_data.py
 Open `notebooks/` in Jupyter or VS Code, select the `p4_education`
 kernel, and execute notebooks in numerical order (01 → 07).
 
-## Project Status
+## 📊 Project Status
 
 | Phase | Title | Status |
 |---|---|---|
@@ -189,7 +191,7 @@ kernel, and execute notebooks in numerical order (01 → 07).
 | 06 | Predictive Modelling & Interpretability | ✅ Complete |
 | 07 | Synthesis & Policy Discussion | ✅ Complete |
 
-## Findings
+## 🎯 Findings
 
 ### Available now (Phases 01–07)
 
@@ -345,7 +347,7 @@ kernel, and execute notebooks in numerical order (01 → 07).
 
   *Figure 6 — Cross-method aggregate convergence: seven Phase 03–06 estimators of the mys-Gini relationship on a single x-axis. All point estimates are negative; the six regression-style estimates from Phases 05–06 sit in the −0.38 to −1.42 Gini-points-per-mys-year range, with the Phase 03 univariate Pearson r at −0.52 (unitless correlation, shown alongside for direction). Phase 05 95% CIs make the within-vs-between identification structure visible: Pooled OLS and RE intervals are strictly below zero, while two-way FE crosses zero.*
 
-## Limitations and Future Work
+## ⚠️ Limitations and Future Work
 
 This project documents a robust negative association between mean years of
 schooling and the Gini coefficient in cross-country panel data 1990–2023,
@@ -401,13 +403,18 @@ rather than transportable causal structure. See
   difficulty of year-out-of-sample prediction on panel data;
   extrapolation to post-2023 country-years introduces a known degradation.
 
-## Documentation
+## 📄 Documentation
 
-- [Project Scope](docs/project_scope.md) — Canonical specification
-- [Project Log](PROJECT_LOG.md) — Append-only record of decisions and progress
-- Phase summaries live in `docs/phase_summaries/` (gitignored, internal use)
+| Document | Description |
+|---|---|
+| [`docs/project_scope.md`](docs/project_scope.md) | Canonical project specification (Phase 00 baseline) |
+| [`docs/findings.md`](docs/findings.md) | Condensed standalone findings narrative — 5 findings with decision anchors |
+| [`docs/methodology.md`](docs/methodology.md) | Workflow, conventions, and `src/` promotion discipline |
+| [`PROJECT_LOG.md`](PROJECT_LOG.md) | Append-only record of design decisions across all eight phases |
 
-## Author
+Phase summaries live in `docs/phase_summaries/` (gitignored, internal handoff documents).
+
+## 👤 Author
 
 **Kota** — [GitHub @kota2003](https://github.com/kota2003)
 
