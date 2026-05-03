@@ -1,0 +1,17 @@
+phase,estimator,scope,mys_effect,se,ci_lower,ci_upper,p,n,source_artefact
+03,univariate_pearson_r,aggregate,-0.52,,,,,,"phase03_summary.md (Pearson r mys-Gini, single-regressor OLS R^2 = 0.27)"
+05,pooled_ols_spec_a,aggregate,-1.328,0.275,-1.87,-0.79,0.0,1642.0,outputs/tables/phase05_s03_ols_results.csv (Spec A row)
+05,fe_spec_a,aggregate,-0.384,0.425,-1.22,0.45,0.366,1642.0,outputs/tables/phase05_s04_fe_results.csv (Spec A row)
+05,re_spec_a,aggregate,-0.688,0.285,-1.25,-0.13,0.016,1642.0,outputs/tables/phase05_s05_re_results.csv (Spec A row)
+05,re_spec_c_within_country,cluster_0,-0.8,,,,0.13,,"outputs/tables/phase05_s06_per_cluster_slopes.csv (RE Spec C, cluster_kmeans_k3=0)"
+05,re_spec_c_within_country,cluster_1,-1.19,,-2.09,-0.28,0.01,,"outputs/tables/phase05_s06_per_cluster_slopes.csv (RE Spec C, cluster_kmeans_k3=1)"
+05,re_spec_c_within_country,cluster_2,-0.33,,,,0.42,,"outputs/tables/phase05_s06_per_cluster_slopes.csv (RE Spec C, cluster_kmeans_k3=2)"
+06,ridge_raw_scale_coef,aggregate,-1.42,,,,,1642.0,"outputs/tables/phase06_s03_linear_baseline.csv (Ridge raw-scale, mys row)"
+06,rf_mean_signed_shap,aggregate,-1.13,,,,,310.0,"outputs/tables/phase06_s06_shap_global.csv (RF, mys mean signed SHAP)"
+06,xgb_mean_signed_shap,aggregate,-1.06,,,,,310.0,"outputs/tables/phase06_s06_shap_global.csv (XGB, mys mean signed SHAP)"
+06,rf_shap_on_mys_slope,cluster_0,-0.08,,,,,17.0,"outputs/tables/phase06_s07_comparison.csv (model=RF, cluster=0)"
+06,rf_shap_on_mys_slope,cluster_1,-1.92,,,,,105.0,"outputs/tables/phase06_s07_comparison.csv (model=RF, cluster=1)"
+06,rf_shap_on_mys_slope,cluster_2,-0.84,,,,,188.0,"outputs/tables/phase06_s07_comparison.csv (model=RF, cluster=2)"
+06,xgb_shap_on_mys_slope,cluster_0,0.16,,,,,17.0,"outputs/tables/phase06_s07_comparison.csv (model=XGB, cluster=0)"
+06,xgb_shap_on_mys_slope,cluster_1,-2.0,,,,,105.0,"outputs/tables/phase06_s07_comparison.csv (model=XGB, cluster=1)"
+06,xgb_shap_on_mys_slope,cluster_2,-0.85,,,,,188.0,"outputs/tables/phase06_s07_comparison.csv (model=XGB, cluster=2)"
