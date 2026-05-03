@@ -1,0 +1,19 @@
+comparison_id,axis,model,feature_or_cluster,phase05_value,phase06_value,metric_value,metric_pvalue,n,sign_agreement
+7i_spearman_rf,ranking_spearman,rf,spec_a_5_features,|coef| ranking on 5 features,mean|SHAP| ranking on 5 features,0.3,0.623837664781073,5.0,
+7i_spearman_xgb,ranking_spearman,xgb,spec_a_5_features,|coef| ranking on 5 features,mean|SHAP| ranking on 5 features,0.3,0.623837664781073,5.0,
+7i_rank_rf_mean_years_schooling,ranking_per_feature,rf,mean_years_schooling,rank=1 |coef|=0.6883,rank=1 mean|SHAP|=2.4758,0.0,,,
+7i_rank_rf_log_population,ranking_per_feature,rf,log_population,rank=2 |coef|=0.4111,rank=5 mean|SHAP|=0.3082,3.0,,,
+7i_rank_rf_log_gdp_per_capita_ppp,ranking_per_feature,rf,log_gdp_per_capita_ppp,rank=3 |coef|=0.0969,rank=2 mean|SHAP|=1.3130,-1.0,,,
+7i_rank_rf_urban_population_pct,ranking_per_feature,rf,urban_population_pct,rank=4 |coef|=0.0119,rank=4 mean|SHAP|=0.3889,0.0,,,
+7i_rank_rf_enrol_secondary,ranking_per_feature,rf,enrol_secondary,rank=5 |coef|=0.0012,rank=3 mean|SHAP|=1.1627,-2.0,,,
+7i_rank_xgb_mean_years_schooling,ranking_per_feature,xgb,mean_years_schooling,rank=1 |coef|=0.6883,rank=1 mean|SHAP|=2.4806,0.0,,,
+7i_rank_xgb_log_population,ranking_per_feature,xgb,log_population,rank=2 |coef|=0.4111,rank=5 mean|SHAP|=0.4480,3.0,,,
+7i_rank_xgb_log_gdp_per_capita_ppp,ranking_per_feature,xgb,log_gdp_per_capita_ppp,rank=3 |coef|=0.0969,rank=2 mean|SHAP|=1.6064,-1.0,,,
+7i_rank_xgb_urban_population_pct,ranking_per_feature,xgb,urban_population_pct,rank=4 |coef|=0.0119,rank=4 mean|SHAP|=0.5969,0.0,,,
+7i_rank_xgb_enrol_secondary,ranking_per_feature,xgb,enrol_secondary,rank=5 |coef|=0.0012,rank=3 mean|SHAP|=1.4352,-2.0,,,
+7ii_mys_slope_cluster_0_rf,per_cluster_mys_slope,rf,cluster_0,RE slope=-0.8009 (p=0.1325),SHAP-on-mys slope=-0.0814 (p=0.1755),0.7194430597894722,,17.0,True
+7ii_mys_slope_cluster_0_xgb,per_cluster_mys_slope,xgb,cluster_0,RE slope=-0.8009 (p=0.1325),SHAP-on-mys slope=+0.1644 (p=0.1855),0.9652964275978622,,17.0,False
+7ii_mys_slope_cluster_1_rf,per_cluster_mys_slope,rf,cluster_1,RE slope=-1.1865 (p=0.0101),SHAP-on-mys slope=-1.9159 (p=0.0000),-0.7293582773065033,,105.0,True
+7ii_mys_slope_cluster_1_xgb,per_cluster_mys_slope,xgb,cluster_1,RE slope=-1.1865 (p=0.0101),SHAP-on-mys slope=-2.0044 (p=0.0000),-0.81789181546878,,105.0,True
+7ii_mys_slope_cluster_2_rf,per_cluster_mys_slope,rf,cluster_2,RE slope=-0.3252 (p=0.4183),SHAP-on-mys slope=-0.8353 (p=0.0000),-0.5101913409465274,,188.0,True
+7ii_mys_slope_cluster_2_xgb,per_cluster_mys_slope,xgb,cluster_2,RE slope=-0.3252 (p=0.4183),SHAP-on-mys slope=-0.8534 (p=0.0000),-0.5282623011477607,,188.0,True

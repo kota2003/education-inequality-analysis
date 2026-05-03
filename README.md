@@ -3,7 +3,7 @@
 
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
-*Last updated: 2026-05-02*
+*Last updated: 2026-05-04*
 
 ## Overview
 
@@ -166,6 +166,9 @@ python scripts/phase04_s02_build_country_features.py
 
 # Phase 05 - modelling-ready panel (depends on panel.csv + cluster_assignments.csv)
 python scripts/phase05_s02_build_modelling_data.py
+
+# Phase 06 - ML-ready panel (depends on panel_modelling.csv + cluster_assignments.csv)
+python scripts/phase06_s02_build_ml_data.py
 ```
 
 ### 5. View the notebooks
@@ -183,12 +186,12 @@ kernel, and execute notebooks in numerical order (01 → 07).
 | 03 | Exploratory Data Analysis | ✅ Complete |
 | 04 | Country Clustering | ✅ Complete |
 | 05 | Econometric Modelling | ✅ Complete |
-| 06 | Predictive Modelling & Interpretability | ⏳ Pending |
+| 06 | Predictive Modelling & Interpretability | ✅ Complete |
 | 07 | Synthesis & Policy Discussion | ⏳ Pending |
 
 ## Findings
 
-### Available now (descriptive layer & explanatory layer, Phases 01–05)
+### Available now (descriptive layer & explanatory layer, Phases 01–06)
 
 - **Phase 01** — [`01_data_collection.ipynb`](notebooks/01_data_collection.ipynb)
   documents the raw layer: a machine-readable manifest of 19 declared variables
@@ -250,11 +253,43 @@ kernel, and execute notebooks in numerical order (01 → 07).
   cluster slopes are exposed in [`outputs/tables/`](outputs/tables/);
   three figures (forest plot, per-cluster bar, MNAR contingency) are in
   [`outputs/figures/`](outputs/figures/).
+- **Phase 06** — [`06_predictive_modelling.ipynb`](notebooks/06_predictive_modelling.ipynb)
+  trains tree-based machine-learning models (Random Forest, XGBoost) plus a
+  Ridge baseline on the same 1,642-country-year Spec A sample, with a temporal
+  holdout (year ≤ 2018 train, 2019–2023 test) and pre-registered
+  hyperparameter grids (RandomizedSearchCV, n_iter=50, TimeSeriesSplit-5
+  folds). Test R² climbs from 0.426 (Ridge) to 0.706 (RF) to **0.733
+  (XGBoost)**; the +0.28 R² jump from Ridge to RF is the non-linear and
+  interaction signal that linear panel models cannot capture. TreeSHAP
+  attributions on the test set produce **identical top-5 global rankings
+  in both tree models**: `mean_years_schooling` #1, `log_gdp_per_capita_ppp`
+  #2, `enrol_secondary` #3, `trade_openness` #4, `gov_expenditure_gdp` #5.
+  Mean signed SHAP for mys is −1.13 (RF) / −1.06 (XGB), close to Phase 05
+  Pooled OLS (−1.33) and Phase 06 Ridge raw-scale (−1.42), well above Phase
+  05 FE (−0.38) — ML performs mixed-identification estimation. **The
+  headline cross-method comparison: Phase 06 corroborates the Phase 05
+  Cluster 1 (Kuznets-transition) finding and strengthens it.** The Phase
+  06 SHAP-on-mys regression slope within Cluster 1 is −1.92 (RF) and −2.00
+  (XGB), roughly 1.7× the Phase 05 RE Spec C linear panel estimate of
+  −1.19\*\*. Spearman ρ between Phase 05 |coef| ranking and Phase 06 mean
+  |SHAP| ranking on the 5 common Spec A features = +0.30 for both models;
+  the rank disagreement below mys reflects Phase 05 sampling noise (4 of 5
+  coefficients have p ≥ 0.19) rather than a methodological clash. **Critical
+  caveat from the boundary-case country holdout** (BRA / ZAF / MEX / ARG
+  removed from training, n=59 evaluation cy): test R² collapses to **−2.4**,
+  RMSE rises to ~10, and mys mean signed SHAP **flips sign** for BRA / ZAF /
+  MEX. This is the strongest internal evidence that Phase 06 in-sample R²
+  reflects within-distribution interpolation and that SHAP attribution is
+  correlation rather than causation — directly framing the Phase 07
+  identification discussion. SHAP CSVs and 7 figures (summary beeswarms,
+  dependence top-3, Brazil 2015 waterfall, ranking comparison, per-cluster
+  slopes) are in [`outputs/tables/`](outputs/tables/) and
+  [`outputs/figures/`](outputs/figures/); trained RF and XGBoost models are
+  saved as `.joblib` under [`outputs/models/`](outputs/models/).
 
-### Coming soon (predictive modelling & policy synthesis, Phases 06–07)
+### Coming soon (synthesis & policy, Phase 07)
 
-- *Top drivers of inequality identified by SHAP (Phase 06)*
-- *Cross-method comparison and policy-relevant takeaways (Phase 07)*
+- *Cross-method synthesis and policy-relevant takeaways (Phase 07)*
 
 ## Limitations and Future Work
 

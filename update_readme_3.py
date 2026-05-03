@@ -5,15 +5,15 @@ Maintenance script per Workflow §8.1: never edit README.md by hand;
 edit this script and rerun. Each phase regenerates this script from
 scratch with the cumulative project state.
 
-Phase 04 update:
-- Phase 04 row in the project status table flipped to complete.
-- Findings section updated: "Available now" extended through Phase 04
-  with the headline Kuznets-confirmation and PC1 = 63.2% findings;
-  "Coming soon" reduced to Phases 05-07.
-- Project structure: src/ now lists log_utils.py.
-- Reproduce-the-data-layer section adds phase04_s02 (the data-producing
-  step that yields country_features.csv).
-- "Last updated" stamp set to 2026-05-01.
+Phase 06 update:
+- Phase 06 row in the project status table flipped to complete.
+- Findings section updated: "Available now" extended through Phase 06
+  with the SHAP-vs-coefficient comparison headline (mys rank #1 in
+  both phases, Cluster 1 slope strengthened ~1.7x) and the boundary-
+  case holdout caveat (R^2 = -2.4); "Coming soon" reduced to Phase 07.
+- Reproduce-the-data-layer section adds phase06_s02 (the data-producing
+  step that yields panel_ml.csv).
+- "Last updated" stamp set to 2026-05-04.
 
 Run from project root:
     python scripts/update_readme.py
@@ -30,7 +30,7 @@ sys.path.insert(0, str(SCRIPT_DIR.parent))
 from src.paths import find_project_root  # noqa: E402
 
 
-LAST_UPDATED = "2026-05-01"
+LAST_UPDATED = "2026-05-04"
 
 # Phase status table rows, in order. Status: complete | pending.
 PHASE_STATUS = [
@@ -39,8 +39,8 @@ PHASE_STATUS = [
     ("02", "Data Cleaning & Integration", "complete"),
     ("03", "Exploratory Data Analysis", "complete"),
     ("04", "Country Clustering", "complete"),
-    ("05", "Econometric Modelling", "pending"),
-    ("06", "Predictive Modelling & Interpretability", "pending"),
+    ("05", "Econometric Modelling", "complete"),
+    ("06", "Predictive Modelling & Interpretability", "complete"),
     ("07", "Synthesis & Policy Discussion", "pending"),
 ]
 
@@ -176,7 +176,7 @@ education-inequality-analysis/
 \u251c\u2500\u2500 .gitignore
 \u251c\u2500\u2500 data/
 \u2502   \u251c\u2500\u2500 raw/                   # Original data + manifest.yaml (gitignored)
-\u2502   \u2514\u2500\u2500 processed/             # panel.csv, country_features*.csv (analytical artefacts)
+\u2502   \u2514\u2500\u2500 processed/             # panel.csv, country_features*.csv, panel_modelling.csv
 \u251c\u2500\u2500 notebooks/                 # Phase-aligned portfolio notebooks (01..07)
 \u251c\u2500\u2500 src/                       # Reusable functions and classes
 \u2502   \u251c\u2500\u2500 paths.py               #   project-root locator
@@ -241,6 +241,12 @@ python scripts/phase02_s05_missingness_report.py
 
 # Phase 04 - country-level feature matrix (depends on panel.csv)
 python scripts/phase04_s02_build_country_features.py
+
+# Phase 05 - modelling-ready panel (depends on panel.csv + cluster_assignments.csv)
+python scripts/phase05_s02_build_modelling_data.py
+
+# Phase 06 - ML-ready panel (depends on panel_modelling.csv + cluster_assignments.csv)
+python scripts/phase06_s02_build_ml_data.py
 ```
 
 ### 5. View the notebooks
@@ -261,7 +267,7 @@ def render_project_status() -> str:
 FINDINGS = """\
 ## Findings
 
-### Available now (descriptive infrastructure & typology, Phases 01\u201304)
+### Available now (descriptive layer & explanatory layer, Phases 01\u201306)
 
 - **Phase 01** \u2014 [`01_data_collection.ipynb`](notebooks/01_data_collection.ipynb)
   documents the raw layer: a machine-readable manifest of 19 declared variables
@@ -299,12 +305,67 @@ FINDINGS = """\
   approximately one-dimensional in this space. Cluster assignments are
   exposed in [`outputs/tables/phase04_s04_cluster_assignments.csv`](outputs/tables/phase04_s04_cluster_assignments.csv)
   and feed Phase 05 robustness specifications as cluster fixed effects.
+- **Phase 05** \u2014 [`05_econometric_modelling.ipynb`](notebooks/05_econometric_modelling.ipynb)
+  estimates the education\u2013Gini relationship across three identification
+  strategies on the 1,642-country-year analytical sample (153 countries,
+  Spec A listwise complete): Pooled OLS, two-way Fixed Effects (country +
+  year), and Random Effects, all with country-clustered standard errors.
+  The coefficient on `mean_years_schooling` attenuates from \u22121.33\\*\\*\\*
+  (Pooled OLS, between-country identification) to a statistically null
+  \u22120.38 (FE, within-country only) and partially recovers to \u22120.69\\*
+  under RE (\u03b8 = 0.82 GLS combination). A mid-phase adaptive override
+  (PROJECT_LOG Step 07b) replaced the pre-registered \"Hausman picks one
+  estimator\" rule with tri-headline reporting after the Mundlak
+  alternative-Hausman test returned conflicting answers under cluster-
+  robust SE. Heterogeneity analysis surfaces the substantive
+  finding: **Cluster 1 (middle-development / Kuznets transition) shows
+  a within-country slope of \u22121.19 (p = 0.010), robust to BRA/ZAF/MEX/ARG
+  boundary reassignment (\u22121.15\\*\\*, p = 0.008)**. This is the econometric
+  corroboration, from a within-country identification strategy, of the
+  Phase 04 Kuznets finding. The robustness suite confirms 2010\u20132019
+  sub-period stability (RE \u22120.74\\*) and surfaces a non-monotonic MNAR
+  pattern (high-income microstates over-represented in the excluded
+  sample, \u03c7\u00b2 p = 0.0017 country-level). Coefficient tables and per-
+  cluster slopes are exposed in [`outputs/tables/`](outputs/tables/);
+  three figures (forest plot, per-cluster bar, MNAR contingency) are in
+  [`outputs/figures/`](outputs/figures/).
+- **Phase 06** \u2014 [`06_predictive_modelling.ipynb`](notebooks/06_predictive_modelling.ipynb)
+  trains tree-based machine-learning models (Random Forest, XGBoost) plus a
+  Ridge baseline on the same 1,642-country-year Spec A sample, with a temporal
+  holdout (year \u2264 2018 train, 2019\u20132023 test) and pre-registered
+  hyperparameter grids (RandomizedSearchCV, n_iter=50, TimeSeriesSplit-5
+  folds). Test R\u00b2 climbs from 0.426 (Ridge) to 0.706 (RF) to **0.733
+  (XGBoost)**; the +0.28 R\u00b2 jump from Ridge to RF is the non-linear and
+  interaction signal that linear panel models cannot capture. TreeSHAP
+  attributions on the test set produce **identical top-5 global rankings
+  in both tree models**: `mean_years_schooling` #1, `log_gdp_per_capita_ppp`
+  #2, `enrol_secondary` #3, `trade_openness` #4, `gov_expenditure_gdp` #5.
+  Mean signed SHAP for mys is \u22121.13 (RF) / \u22121.06 (XGB), close to Phase 05
+  Pooled OLS (\u22121.33) and Phase 06 Ridge raw-scale (\u22121.42), well above Phase
+  05 FE (\u22120.38) \u2014 ML performs mixed-identification estimation. **The
+  headline cross-method comparison: Phase 06 corroborates the Phase 05
+  Cluster 1 (Kuznets-transition) finding and strengthens it.** The Phase
+  06 SHAP-on-mys regression slope within Cluster 1 is \u22121.92 (RF) and \u22122.00
+  (XGB), roughly 1.7\u00d7 the Phase 05 RE Spec C linear panel estimate of
+  \u22121.19\\*\\*. Spearman \u03c1 between Phase 05 |coef| ranking and Phase 06 mean
+  |SHAP| ranking on the 5 common Spec A features = +0.30 for both models;
+  the rank disagreement below mys reflects Phase 05 sampling noise (4 of 5
+  coefficients have p \u2265 0.19) rather than a methodological clash. **Critical
+  caveat from the boundary-case country holdout** (BRA / ZAF / MEX / ARG
+  removed from training, n=59 evaluation cy): test R\u00b2 collapses to **\u22122.4**,
+  RMSE rises to ~10, and mys mean signed SHAP **flips sign** for BRA / ZAF /
+  MEX. This is the strongest internal evidence that Phase 06 in-sample R\u00b2
+  reflects within-distribution interpolation and that SHAP attribution is
+  correlation rather than causation \u2014 directly framing the Phase 07
+  identification discussion. SHAP CSVs and 7 figures (summary beeswarms,
+  dependence top-3, Brazil 2015 waterfall, ranking comparison, per-cluster
+  slopes) are in [`outputs/tables/`](outputs/tables/) and
+  [`outputs/figures/`](outputs/figures/); trained RF and XGBoost models are
+  saved as `.joblib` under [`outputs/models/`](outputs/models/).
 
-### Coming soon (analytical findings, Phases 05\u201307)
+### Coming soon (synthesis & policy, Phase 07)
 
-- *Headline results from econometric models (Phase 05)*
-- *Top drivers of inequality identified by SHAP (Phase 06)*
-- *Cross-method comparison and policy-relevant takeaways (Phase 07)*
+- *Cross-method synthesis and policy-relevant takeaways (Phase 07)*
 """
 
 
