@@ -12,16 +12,16 @@ env/
 # Data
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/manifest.yaml
 data/processed/*
 !data/processed/.gitkeep
-!data/raw/.gitkeep
-!data/raw/manifest.yaml
 
-# Outputs (track structure, not contents initially)
+# Outputs - models gitignored due to file size (RF .joblib ~55 MB)
+# Reproducible via scripts/phase06_s04_random_forest.py and phase06_s05_xgboost.py
 outputs/models/*
 !outputs/models/.gitkeep
 
-# Phase summaries (internal handoff artefacts)
+# Phase summaries (internal handoff artefacts, Convention 6.6)
 docs/phase_summaries/*
 !docs/phase_summaries/.gitkeep
 
@@ -36,3 +36,8 @@ docs/phase_summaries/*
 # Conda
 *.yaml.bak
 environment.local.yml
+
+# Scratch / dump files
+*_dump.txt
+*_dump.csv
+scratch_*

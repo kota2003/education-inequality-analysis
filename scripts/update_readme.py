@@ -5,28 +5,22 @@ Maintenance script per Workflow §8.1: never edit README.md by hand;
 edit this script and rerun. Each phase regenerates this script from
 scratch with the cumulative project state.
 
-Phase 07 portfolio-polish update (post-close):
-- Section header emojis added to align with the cumulative portfolio
-  convention used in earlier projects (e.g.
-  inflation-forecasting-analysis). Emojis are scoped to section
-  headers only; prose, tables, captions, and the Findings entry
-  bodies are unchanged. README structure (TOC, badges) is
-  intentionally not adopted - this is a section-icon polish, not a
-  format port.
-- Documentation section extended with two new public-facing
-  references: docs/findings.md (condensed standalone findings
-  narrative) and docs/methodology.md (workflow and conventions
-  reference). Both files are written directly as markdown per
-  Convention 6.6 (no Python wrapper) and complete the portfolio's
-  public documentation set alongside README, project_scope, and
-  PROJECT_LOG.
-- All Findings prose entries (Phases 01-07) preserved unchanged from
-  the prior Phase 07 Step 05 regeneration.
+Phase 07 portfolio-polish update v3 (post-close):
+- Section header emojis preserved.
+- Table of Contents (12 entries) preserved between subtitle and
+  Overview.
+- Documentation section preserved with docs/findings.md and
+  docs/methodology.md links.
+- All Findings prose entries (Phases 01-07) preserved EXCEPT a
+  single targeted correction in the Phase 06 entry: the trained
+  models reference no longer points to outputs/models/ (which is
+  gitignored due to phase06_s04_rf.joblib being ~55 MB). Models
+  are described as reproducible via the corresponding step scripts,
+  matching the gitignore policy and preserving portfolio integrity.
 - All inline figure embeds (six raw GitHub URLs across Phase 04 / 05
   / 06 / 07 entries) preserved unchanged.
 - Limitations and Future Work section preserved in its locked Phase
   07 Decision 5(b) form.
-- Project Status table unchanged: 8 phases complete, 0 pending.
 - "Last updated" stamp set to 2026-05-04.
 
 Run from project root:
@@ -47,9 +41,6 @@ from src.paths import find_project_root  # noqa: E402
 LAST_UPDATED = "2026-05-04"
 
 # Raw GitHub URL prefix for embedded figures in the Findings section.
-# Matches the pattern used in earlier portfolio projects (e.g.
-# food-security-risk-analysis): kota2003/<repo>/main/outputs/figures.
-# Files are sourced from outputs/figures/ which is committed to the repo.
 RAW_URL_BASE = (
     "https://raw.githubusercontent.com/kota2003/"
     "education-inequality-analysis/main/outputs/figures"
@@ -84,6 +75,24 @@ HEADER = """\
 > Quantifying the relationship between education and income inequality using panel econometrics and interpretable machine learning.
 
 *Last updated: {last_updated}*
+"""
+
+
+TOC = """\
+## \U0001f4cb Table of Contents
+
+1. [Overview](#-overview)
+2. [Research Questions](#-research-questions)
+3. [Data](#%EF%B8%8F-data)
+4. [Methods](#-methods)
+5. [Tech Stack](#%EF%B8%8F-tech-stack)
+6. [Project Structure](#-project-structure)
+7. [Installation and Usage](#-installation-and-usage)
+8. [Project Status](#-project-status)
+9. [Findings](#-findings)
+10. [Limitations and Future Work](#%EF%B8%8F-limitations-and-future-work)
+11. [Documentation](#-documentation)
+12. [Author](#-author)
 """
 
 
@@ -211,7 +220,7 @@ education-inequality-analysis/
 \u251c\u2500\u2500 outputs/
 \u2502   \u251c\u2500\u2500 figures/               #   phase-prefixed figures
 \u2502   \u251c\u2500\u2500 tables/                #   phase-prefixed CSV reports
-\u2502   \u2514\u2500\u2500 models/                #   trained models (Phase 06+)
+\u2502   \u2514\u2500\u2500 models/                #   trained models (gitignored, reproducible via scripts)
 \u2514\u2500\u2500 docs/
     \u251c\u2500\u2500 project_scope.md       # Canonical project scope
     \u251c\u2500\u2500 findings.md            # Condensed standalone findings narrative
@@ -292,8 +301,10 @@ def render_project_status() -> str:
 # Findings section. Embedded figures are placed at the end of each Phase
 # 04 / 05 / 06 / 07 entry as visual punctuation, with raw GitHub URL
 # substituted via `.format(raw_url_base=RAW_URL_BASE)` in render_readme().
-# No prose changes were made to the existing entries; the embeds are
-# additive only.
+# v3 update: Phase 06 entry's "trained models" reference no longer
+# points to outputs/models/ (gitignored due to ~55 MB RF .joblib).
+# Models are described as reproducible via the corresponding step
+# scripts, matching the gitignore policy.
 FINDINGS = """\
 ## \U0001f3af Findings
 
@@ -404,8 +415,10 @@ FINDINGS = """\
   identification discussion. SHAP CSVs and 7 figures (summary beeswarms,
   dependence top-3, Brazil 2015 waterfall, ranking comparison, per-cluster
   slopes) are in [`outputs/tables/`](outputs/tables/) and
-  [`outputs/figures/`](outputs/figures/); trained RF and XGBoost models are
-  saved as `.joblib` under [`outputs/models/`](outputs/models/).
+  [`outputs/figures/`](outputs/figures/); trained Random Forest and XGBoost
+  models (`.joblib`, ~55 MB and ~2 MB respectively) are reproducible via
+  [`scripts/phase06_s04_random_forest.py`](scripts/phase06_s04_random_forest.py)
+  and [`scripts/phase06_s05_xgboost.py`](scripts/phase06_s05_xgboost.py).
 
   ![XGBoost TreeSHAP global summary]({raw_url_base}/phase06_s06_shap_summary_xgb.png)
 
@@ -538,6 +551,7 @@ Part of a data science portfolio for roles in applied analytics and applied rese
 def render_readme() -> str:
     sections = [
         HEADER.format(last_updated=LAST_UPDATED),
+        TOC,
         OVERVIEW,
         RESEARCH_QUESTIONS,
         DATA,
@@ -569,6 +583,7 @@ def main() -> int:
     n_pending = sum(1 for _, _, s in PHASE_STATUS if s == "pending")
     print(f"  phase status: {n_complete} complete, {n_pending} pending")
     print(f"  embedded figures: {content.count('![')} (raw GitHub URLs)")
+    print(f"  TOC entries: {sum(1 for line in TOC.splitlines() if line and line[0].isdigit())}")
     print(f"  last updated: {LAST_UPDATED}")
 
     return 0

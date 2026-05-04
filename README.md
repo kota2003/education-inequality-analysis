@@ -5,6 +5,21 @@
 
 *Last updated: 2026-05-04*
 
+## 📋 Table of Contents
+
+1. [Overview](#-overview)
+2. [Research Questions](#-research-questions)
+3. [Data](#%EF%B8%8F-data)
+4. [Methods](#-methods)
+5. [Tech Stack](#%EF%B8%8F-tech-stack)
+6. [Project Structure](#-project-structure)
+7. [Installation and Usage](#-installation-and-usage)
+8. [Project Status](#-project-status)
+9. [Findings](#-findings)
+10. [Limitations and Future Work](#%EF%B8%8F-limitations-and-future-work)
+11. [Documentation](#-documentation)
+12. [Author](#-author)
+
 ## 📌 Overview
 
 Education is widely considered a lever for reducing income inequality, but the
@@ -113,7 +128,7 @@ education-inequality-analysis/
 ├── outputs/
 │   ├── figures/               #   phase-prefixed figures
 │   ├── tables/                #   phase-prefixed CSV reports
-│   └── models/                #   trained models (Phase 06+)
+│   └── models/                #   trained models (gitignored, reproducible via scripts)
 └── docs/
     ├── project_scope.md       # Canonical project scope
     ├── findings.md            # Condensed standalone findings narrative
@@ -300,8 +315,10 @@ kernel, and execute notebooks in numerical order (01 → 07).
   identification discussion. SHAP CSVs and 7 figures (summary beeswarms,
   dependence top-3, Brazil 2015 waterfall, ranking comparison, per-cluster
   slopes) are in [`outputs/tables/`](outputs/tables/) and
-  [`outputs/figures/`](outputs/figures/); trained RF and XGBoost models are
-  saved as `.joblib` under [`outputs/models/`](outputs/models/).
+  [`outputs/figures/`](outputs/figures/); trained Random Forest and XGBoost
+  models (`.joblib`, ~55 MB and ~2 MB respectively) are reproducible via
+  [`scripts/phase06_s04_random_forest.py`](scripts/phase06_s04_random_forest.py)
+  and [`scripts/phase06_s05_xgboost.py`](scripts/phase06_s05_xgboost.py).
 
   ![XGBoost TreeSHAP global summary](https://raw.githubusercontent.com/kota2003/education-inequality-analysis/main/outputs/figures/phase06_s06_shap_summary_xgb.png)
 
